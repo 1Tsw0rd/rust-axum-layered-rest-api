@@ -281,6 +281,40 @@ Ok(ApiResponse::success_with_data(
 }
 ```
 
+### 성공 - 목록 Data 포함
+
+```rust
+Ok(ApiResponse::success_with_list(
+    StatusCode::OK,
+    products,
+    page,
+    size,
+    count,
+    total,
+))
+```
+
+```json
+{
+  "success": true,
+  "status": 200,
+  "data": [],
+  "meta": {
+    "count": 2,
+    "total": 5,
+    "page": 1,
+    "size": 2,
+    "total_pages": 3
+  }
+}
+```
+
+- `count`: 현재 페이지에 포함된 데이터 개수
+- `total`: 전체 검색 결과 개수
+- `page`: 현재 페이지 번호
+- `size`: 페이지당 데이터 개수
+- `total_pages`: 전체 페이지 수
+
 ### 성공 - Data 없음
 
 ```rust
