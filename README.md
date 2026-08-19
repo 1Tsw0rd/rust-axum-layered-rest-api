@@ -706,24 +706,7 @@ Account 참고
 
 ---
 
-## Current Scope
-
-현재 프로젝트는 **Rust / Axum 서버 기본기를 직접 구현하고 이해하는 것**에 초점을 두고 있습니다.
-
-주요 구현 범위:
-
-- REST API 계층 구조
-- Request Validation
-- PostgreSQL + SQLx
-- 공통 Error / Response
-- Request ID / Logging
-- Role + Permission
-- JWT Authentication
-- Refresh Token / Rotation
-- Logout
-- Redis / Dragonfly Backend Switching
-
-## 추가 가능한 예제
+## 확장 가능한 예제
 
 현재 프로젝트의 기본 구조를 기반으로 다음과 같은 기능을 추가해 확장할 수 있습니다.
 
