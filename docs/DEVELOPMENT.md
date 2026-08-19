@@ -226,18 +226,48 @@ FLUSHDB              현재 DB 전체 삭제(주의)
 테스트용 데이터베이스는 개발용 데이터베이스와 분리해야 합니다.
 
 ```bash
-# 모든 단위·통합 테스트
-cargo test
+# 전체 단위·통합 테스트
+# DB·Redis 공유 상태 충돌을 피하기 위해 직렬 실행
+cargo test -- --test-threads=1
 
-# 통합 테스트 바이너리 전체
-cargo test --test api
+# src 내부 단위 테스트 전체
+cargo test --lib
 
-# 특정 모듈 테스트 예시
+# src 내부 특정 모듈 단위 테스트
 cargo test --lib common::auth::jwt
+cargo test --lib common::auth::authorization
+cargo test --lib common::auth::permission
+cargo test --lib common::auth::role
+cargo test --lib common::auth::refresh_token
+cargo test --lib common::security::password
+cargo test --lib domains::account::dto
 
-# 특정 통합 테스트와 테스트 로그 확인
-cargo test --test api product::get_product -- --nocapture
+# 통합 API 테스트 전체
+cargo test --test api -- --test-threads=1
+
+# Account API 파일별
+cargo test --test api account::create_account -- --test-threads=1
+cargo test --test api account::login -- --test-threads=1
+cargo test --test api account::get_me -- --test-threads=1
+cargo test --test api account::refresh -- --test-threads=1
+cargo test --test api account::logout -- --test-threads=1
+
+# Product API 파일별
+cargo test --test api product::get_product -- --test-threads=1
+cargo test --test api product::get_products -- --test-threads=1
+cargo test --test api product::create_product -- --test-threads=1
+cargo test --test api product::put_product -- --test-threads=1
+cargo test --test api product::patch_product -- --test-threads=1
+cargo test --test api product::delete_product -- --test-threads=1
+
+# 특정 테스트 함수 하나만 실행하는 예시
+cargo test --lib common::auth::jwt::tests::create_and_verify_success
+
+# 테스트 로그 출력
+cargo test --test api account::login -- --test-threads=1 --nocapture
 ```
+
+`cargo test`는 기본적으로 테스트를 병렬 실행합니다. 이 프로젝트는 테스트마다 PostgreSQL 데이터를 초기화하고 Redis를 공유하므로, 전체 테스트와 API 통합 테스트는 `--test-threads=1`을 함께 사용합니다.
 
 ## 8. 브랜치와 커밋 규칙
 
