@@ -72,7 +72,16 @@ HTTP Request
 ---
 ## 특징
 
-### 계층 간 단순 변환
+- [1. 계층 간 단순 변환](#1-계층-간-단순-변환)
+- [2. Request Validation](#2-request-validation)
+- [3. SQLx Data Access](#3-sqlx-data-access)
+- [4. Common API Response / Error](#4-common-api-response--error)
+- [5. Request ID & Logging](#5-request-id--logging)
+- [6. Redis / Dragonfly Backend Switching](#6-redis--dragonfly-backend-switching)
+- [7. Role + Permission](#7-role--permission)
+- [8. Authentication: JWT + Refresh Token + Logout](#8-authentication-jwt--refresh-token--logout)
+
+## 1. 계층 간 단순 변환
 Entity와 Response DTO처럼 단순한 변환은 `From` / `Into`를 사용합니다.
 
 ```rust
@@ -140,7 +149,7 @@ let params = CreateAccountParams::new(
 
 ---
 
-## Request Validation
+## 2. Request Validation
 
 JSON Body뿐 아니라 **Path / Query 입력값까지 동일한 Validation 흐름으로 검증**합니다.
 
@@ -197,7 +206,7 @@ keyword = keyboard
 
 ---
 
-## SQLx Data Access
+## 3. SQLx Data Access
 
 ORM 대신 SQLx를 사용하여 **필요한 컬럼과 SQL을 직접 지정**합니다.
 
@@ -258,7 +267,7 @@ SQLx의 Query Macro는 데이터베이스의 SQL 결과와 Rust 타입을
 
 ---
 
-## Common API Response / Error
+## 4. Common API Response / Error
 
 `AppError`와 `ApiResponse`를 통해 API의 성공/실패 응답 형식을 통일했습니다.
 
@@ -345,7 +354,7 @@ Controller마다 제각각 응답을 만들지 않고 공통 Response / Error �
 
 ---
 
-## Request ID & Logging
+## 5. Request ID & Logging
 
 모든 요청에 고유한 Request ID를 부여해 **동일 요청에서 발생한 로그를 하나의 흐름으로 추적**할 수 있도록 구성했습니다.
 
@@ -395,7 +404,7 @@ Request ID를 기준으로 요청의 시작부터 종료까지 관련 로그를 
 
 ---
 
-## Redis / Dragonfly Backend Switching
+## 6. Redis / Dragonfly Backend Switching
 
 Cache Backend는 환경변수로 선택할 수 있습니다.
 
@@ -427,7 +436,7 @@ CACHE_BACKEND=dragonfly
 
 ---
 
-## Role + Permission
+## 7. Role + Permission
 
 Role과 Permission을 분리하고, `secured_route!`를 통해 **Route 정의에서 필요한 권한을 선언**할 수 있도록 구성했습니다.
 
@@ -465,9 +474,21 @@ Role과 Permission을 분리하고, `secured_route!`를 통해 **Route 정의에
 
 Route 정의만 보더라도 해당 API가 권한 검사를 사용하는지 확인할 수 있도록 구성했습니다.
 
+### Permission 목록
+
+| Domain | Permission | 설명 |
+|---|---|---|
+| Account | `account:get_me` | 현재 로그인한 계정 조회 |
+| Product | `product:create_product` | 상품 생성 |
+| Product | `product:get_product` | 상품 단건 조회 |
+| Product | `product:get_products` | 상품 목록 조회 |
+| Product | `product:put_product` | 상품 전체 수정 |
+| Product | `product:patch_product` | 상품 일부 수정 |
+| Product | `product:delete_product` | 상품 삭제 |
+
 ---
 
-## Authentication: JWT + Refresh Token + Logout
+## 8. Authentication: JWT + Refresh Token + Logout
 
 Access Token과 Refresh Token을 분리한 이중 토큰 구조를 사용합니다.
 
