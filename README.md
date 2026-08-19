@@ -721,3 +721,36 @@ Account 참고
   - Redis 없이 프로세스 메모리를 이용한 요청 횟수 제한
   - IP 또는 API 단위로 요청 빈도를 제어
   - 단일 서버 환경에서 동작하는 Rate Limit 구현 예제
+
+- **Refresh Token Rotation 동시성 개선**
+  - 현재 Rotation은 `GET → 검증 → 변경` 과정이 분리되어 있어
+    동시에 동일한 Refresh Token으로 요청이 들어올 경우 Race Condition이 발생할 수 있음
+  - 향후 Redis Lua Script를 사용하여 Refresh Token 검증과 Rotation을 하나의 원자적 작업으로 처리 가능
+
+```text
+Request A                  Request B
+    │                          │
+    ├─ GET old_hash            │
+    │                          ├─ GET old_hash
+    │                          │
+    ├─ 검증 성공                ├─ 검증 성공
+    │                          │
+    ├─ new_token_A 저장         ├─ new_token_B 저장
+    │                          │
+    └──────── Race Condition ──┘
+
+[Solution]
+    Rust 애플리케이션
+    │
+    ├─ src/common/redis/rotate_refresh_token.lua
+    │
+    │  애플리케이션 초기화 시
+    ▼
+Redis SCRIPT LOAD
+    │
+    └─ SHA 반환
+          ↓
+     Script SHA 캐싱
+          ↓
+       EVALSHA
+```
