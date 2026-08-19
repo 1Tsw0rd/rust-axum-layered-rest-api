@@ -14,6 +14,15 @@ NestJS / Spring Boot에서 익숙한 계층형 서버 구조를 Rust/Axum에 적
 > **Project goal**  
 > 단순 CRUD 예제를 넘어, 새로운 API를 추가할 때 참고할 수 있는 Rust/Axum 서버의 기본 구조와 인증/인가 패턴을 하나의 프로젝트에서 정리하는 것을 목표로 합니다.
 
+> **Project context**
+>
+> - Rust 언어 학습: 약 1개월
+> - Axum 학습 및 프로젝트 개발: 약 3주
+> - 개발 방식: AI와 지속적으로 설계·구현 방향을 논의하며 진행한 바이브 코딩
+> - 사용 AI 도구(무료 버전): ChatGPT, Grok, Claude, Google AI Search 엔진
+> - 사용 AI 코딩 도구: Codex (약 3일)
+> - 프로젝트 성격: Rust/Axum 학습 과정에서 직접 설계·구현하며 서버 기본기를 익힌 개인 학습 프로젝트
+> - 현재 수준: Rust/Axum 숙련 개발자의 완성품이 아닌 학습 단계의 프로젝트
 ---
 
 ## Architecture
