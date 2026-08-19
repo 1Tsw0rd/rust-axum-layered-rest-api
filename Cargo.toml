@@ -1,7 +1,11 @@
 [package]
-name = "rust-axum-layered-rest-api"
-version = "0.1.0"
-edition = "2024"
+name = "rust-axum-layered-rest-api"   # 리포지토리/패키지 식별용 이름
+version = "0.1.0"                     # 패키지 버전
+edition = "2024"                      # 사용할 Rust edition(cargo new 기본값)
+
+[[bin]]
+name = "my_app"           # 우리가 실행할 프로그램(main.rs)의 이름을 'my_app'으로 지어줌
+path = "src/main.rs"      # 실행 파일이 src/main.rs에 있다고 컴파일러에게 위치를 알려줌
 
 [dependencies]
 argon2 = "0.5.3"
