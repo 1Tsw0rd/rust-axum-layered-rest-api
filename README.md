@@ -411,6 +411,13 @@ Request ID Middleware
 
 Request ID를 기준으로 요청의 시작부터 종료까지 관련 로그를 구분해서 확인할 수 있습니다.
 
+또한, 모든 응답에는 `x-request-id` 헤더가 포함되며, 이 값으로 서버 로그에서 해당 요청의 전체 처리 흐름을 검색할 수 있습니다.
+
+```text
+Response Header
+  x-request-id: 907af9f7-c47b-4dd1-a228-1354a50c1650
+```
+
 ---
 
 ## 6. Redis / Dragonfly Backend Switching
