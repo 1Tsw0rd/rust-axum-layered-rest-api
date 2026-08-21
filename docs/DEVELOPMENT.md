@@ -201,15 +201,16 @@ docker compose down
 
 ```bash
 # Redis
-docker compose exec redis redis-cli -a "$REDIS_PASSWORD"
+docker compose exec redis redis-cli -a "$REDIS_PASSWORD" -n "$REDIS_DB"
 
 # Dragonfly
-docker compose exec dragonfly redis-cli -a "$DRAGONFLY_PASSWORD"
+docker compose exec dragonfly redis-cli -a "$DRAGONFLY_PASSWORD" -n "$DRAGONFLY_DB"
 ```
 
 자주 사용하는 명령:
 
 ```text
+SELECT <DB번호>       DB 선택(0: 개발DB, 1: 테스트DB)
 PING                 연결 확인
 SCAN 0               키 목록을 안전하게 순회
 GET <key>            문자열 값 조회
