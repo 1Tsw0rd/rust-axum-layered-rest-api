@@ -106,7 +106,7 @@ pub async fn test_app() -> (Router, PgPool, RedisClient) {
         jwt,
         redis: redis_client.clone(),
     };
-    
+
     // 테스트용 Router 구성
     let app = Router::new()
         .nest("/products", product_router(state.clone()))
@@ -118,11 +118,11 @@ pub async fn test_app() -> (Router, PgPool, RedisClient) {
 
 pub async fn seed_test_products(pool: &PgPool) {
     for (name, description, price) in [
-        ("가습기", "겨울철 실내 습도 조절용 가습기", 1000_i64),
-        ("나침반", "야외 아웃도어 및 서바이벌용 나침반", 2000_i64),
-        ("다이어리", "업무 스케줄 관리용 가죽 다이어리", 3000_i64),
-        ("라디오", "재난 대비 및 FM/AM 수신용 라디오", 4000_i64),
-        ("마우스패드", "장시간 작업용 친환경 마우스패드", 5000_i64),
+        ("Product Keyboard A", "테스트용 상품 설명", 1000_i64),
+        ("Product Keyboard B", "테스트용 상품 설명", 2000_i64),
+        ("Product Keyboard C", "테스트용 상품 설명", 3000_i64),
+        ("Radio Device", "테스트용 상품 설명", 4000_i64),
+        ("Mouse Pad", "테스트용 상품 설명", 5000_i64),
     ] {
         sqlx::query("INSERT INTO products (name, description, price) VALUES ($1, $2, $3)")
             .bind(name)
