@@ -10,19 +10,37 @@ http://127.0.0.1:8080
 
 ## API Overview
 
-| 기능 | API Method & URL | 인증 / 요청 조건 | Request | Response |
-|---|---|---|---|---|
-| 회원가입 | `POST /accounts` | 인증 불필요 | [Request](#account-create-request) | [Response](#account-create-response) |
-| 로그인 | `POST /accounts/login` | 인증 불필요 | [Request](#account-login-request) | [Response](#account-login-response) |
-| 내 계정 조회 | `GET /accounts/me` | Access Token 필요 | [Request](#account-me-request) | [Response](#account-me-response) |
-| Access Token 재발급 | `POST /accounts/refresh` | 만료된 Access Token + Refresh Cookie 필요 | [Request](#account-refresh-request) | [Response](#account-refresh-response) |
-| 로그아웃 | `POST /accounts/logout` | Access Token + Refresh Cookie 필요 | [Request](#account-logout-request) | [Response](#account-logout-response) |
-| 상품 목록 조회 | `GET /products/?page=1&size=20&keyword=keyboard` | Access Token 필요 | [Request](#product-list-request) | [Response](#product-list-response) |
-| 상품 단건 조회 | `GET /products/{id}` | Access Token 필요 | [Request](#product-get-request) | [Response](#product-get-response) |
-| 상품 생성 | `POST /products` | Access Token 필요 | [Request](#product-create-request) | [Response](#product-create-response) |
-| 상품 전체 수정 | `PUT /products/{id}` | Access Token 필요 | [Request](#product-put-request) | [Response](#product-put-response) |
-| 상품 일부 수정 | `PATCH /products/{id}` | Access Token 필요 | [Request](#product-patch-request) | [Response](#product-patch-response) |
-| 상품 삭제 | `DELETE /products/{id}` | Access Token 필요 | [Request](#product-delete-request) | [Response](#product-delete-response) |
+| 기능 | API Method & URL | 인증 / 요청 조건 | Request | Response | 권한 |
+|---|---|---|---|---|---|
+| 회원가입 | `POST /accounts` | 인증 불필요 | [Request](#account-create-request) | [Response](#account-create-response) | - |
+| 로그인 | `POST /accounts/login` | 인증 불필요 | [Request](#account-login-request) | [Response](#account-login-response) | - |
+| 내 계정 조회 | `GET /accounts/me` | Access Token 필요 | [Request](#account-me-request) | [Response](#account-me-response) | [확인](#role-permission-table) |
+| Access Token 재발급 | `POST /accounts/refresh` | 만료된 Access Token + Refresh Cookie 필요 | [Request](#account-refresh-request) | [Response](#account-refresh-response) | - |
+| 로그아웃 | `POST /accounts/logout` | Access Token + Refresh Cookie 필요 | [Request](#account-logout-request) | [Response](#account-logout-response) | - |
+| 상품 목록 조회 | `GET /products?page=1&size=20&keyword=keyboard` | Access Token 필요 | [Request](#product-list-request) | [Response](#product-list-response) | [확인](#role-permission-table) |
+| 상품 단건 조회 | `GET /products/{id}` | Access Token 필요 | [Request](#product-get-request) | [Response](#product-get-response) | [확인](#role-permission-table) |
+| 상품 생성 | `POST /products` | Access Token 필요 | [Request](#product-create-request) | [Response](#product-create-response) | [확인](#role-permission-table) |
+| 상품 전체 수정 | `PUT /products/{id}` | Access Token 필요 | [Request](#product-put-request) | [Response](#product-put-response) | [확인](#role-permission-table) |
+| 상품 일부 수정 | `PATCH /products/{id}` | Access Token 필요 | [Request](#product-patch-request) | [Response](#product-patch-response) | [확인](#role-permission-table) |
+| 상품 삭제 | `DELETE /products/{id}` | Access Token 필요 | [Request](#product-delete-request) | [Response](#product-delete-response) | [확인](#role-permission-table) |
+
+<a id="role-permission-table"></a>
+### Role별 API 권한
+
+`-`는 Role별 Permission 검사를 적용하지 않는 API를 의미합니다.
+
+| API | Admin | Employee | Customer |
+|---|---|---|---|
+| 회원가입 | - | - | - |
+| 로그인 | - | - | - |
+| 내 계정 조회 | ✅ | ✅ | ✅ |
+| Access Token 재발급 | - | - | - |
+| 로그아웃 | - | - | - |
+| 상품 조회(단건/목록) | ✅ | ✅ | ✅ |
+| 상품 생성 | ✅ | ✅ | ❌ |
+| 상품 전체 수정(PUT) | ✅ | ✅ | ❌ |
+| 상품 일부 수정(PATCH) | ✅ | ✅ | ❌ |
+| 상품 삭제 | ✅ | ❌ | ❌ |
 
 ## 공통 인증
 
@@ -256,7 +274,7 @@ Redis·Dragonfly의 Refresh Session과 `refresh_token` Cookie가 삭제됩니다
 ### 상품 목록 조회 Request
 
 ```http
-GET /products/?page=1&size=20&keyword=keyboard
+GET /products?page=1&size=20&keyword=keyboard
 Authorization: Bearer <access-token>
 ```
 
