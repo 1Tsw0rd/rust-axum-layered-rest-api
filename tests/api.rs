@@ -30,7 +30,7 @@ pub async fn cleanup_test_db(pool: &PgPool) {
         .expect("테스트 DB 초기화 실패");
 }
 
-pub async fn cleanup_test_redis(redis: &RedisClient) {
+async fn cleanup_test_redis(redis: &RedisClient) {
     redis
         .atomic_pipeline(|pipeline| {
             pipeline.cmd("FLUSHDB").ignore();
@@ -39,13 +39,12 @@ pub async fn cleanup_test_redis(redis: &RedisClient) {
         .expect("테스트 Redis 초기화 실패");
 }
 
-// 앱 조립만 담당: DB pool 연결 + 항상 clean DB 보장 + Redis 연결
-// 테스트 데이터(seed_test_products)와 Redis 데이터 정리(cleanup_test_redis)는
-// 각 테스트가 필요할 때 명시적으로 호출한다
+// 앱 조립만 담당: DB pool 연결 + 항상 clean DB 보장 + Redis 연결 + 항상 clean Redis 보장
+// 테스트 데이터(seed_test_products)만 각 테스트가 필요할 때 명시적으로 호출한다
 pub async fn test_app() -> (Router, PgPool, RedisClient) {
     dotenvy::from_filename(".env.test").ok();
 
-    // porstgres 연결 설정
+    // PostgreSQL 연결 설정
     let test_db_url = std::env::var("TEST_DATABASE_URL")
         .expect("TEST_DATABASE_URL 추출 실패");
 
@@ -96,6 +95,9 @@ pub async fn test_app() -> (Router, PgPool, RedisClient) {
     let redis_client = RedisClient::new(redis)
         .await
         .expect("테스트 Redis 연결 초기화 실패");
+
+    // 테스트용 Redis/Dragonfly DB를 통째로 비움
+    cleanup_test_redis(&redis_client).await;
 
     // 테스트용 JWT 설정 생성
     let jwt = JwtConfig::new("test-secret-key-for-test", 3600);
