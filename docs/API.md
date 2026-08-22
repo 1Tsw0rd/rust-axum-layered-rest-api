@@ -12,14 +12,14 @@ http://127.0.0.1:8080
 
 | 기능 | API Method & URL | 인증 / 요청 조건 | Request | Response |
 |---|---|---|---|---|
-| 회원가입 | `POST /accounts/` | 인증 불필요 | [Request](#account-create-request) | [Response](#account-create-response) |
+| 회원가입 | `POST /accounts` | 인증 불필요 | [Request](#account-create-request) | [Response](#account-create-response) |
 | 로그인 | `POST /accounts/login` | 인증 불필요 | [Request](#account-login-request) | [Response](#account-login-response) |
 | 내 계정 조회 | `GET /accounts/me` | Access Token 필요 | [Request](#account-me-request) | [Response](#account-me-response) |
 | Access Token 재발급 | `POST /accounts/refresh` | 만료된 Access Token + Refresh Cookie 필요 | [Request](#account-refresh-request) | [Response](#account-refresh-response) |
 | 로그아웃 | `POST /accounts/logout` | Access Token + Refresh Cookie 필요 | [Request](#account-logout-request) | [Response](#account-logout-response) |
 | 상품 목록 조회 | `GET /products/?page=1&size=20&keyword=keyboard` | Access Token 필요 | [Request](#product-list-request) | [Response](#product-list-response) |
 | 상품 단건 조회 | `GET /products/{id}` | Access Token 필요 | [Request](#product-get-request) | [Response](#product-get-response) |
-| 상품 생성 | `POST /products/` | Access Token 필요 | [Request](#product-create-request) | [Response](#product-create-response) |
+| 상품 생성 | `POST /products` | Access Token 필요 | [Request](#product-create-request) | [Response](#product-create-response) |
 | 상품 전체 수정 | `PUT /products/{id}` | Access Token 필요 | [Request](#product-put-request) | [Response](#product-put-response) |
 | 상품 일부 수정 | `PATCH /products/{id}` | Access Token 필요 | [Request](#product-patch-request) | [Response](#product-patch-response) |
 | 상품 삭제 | `DELETE /products/{id}` | Access Token 필요 | [Request](#product-delete-request) | [Response](#product-delete-response) |
@@ -112,7 +112,7 @@ Refresh Token은 로그인·재발급 응답의 `HttpOnly`, `Secure`, `SameSite=
 ### 회원가입 Request
 
 ```http
-POST /accounts/
+POST /accounts
 Content-Type: application/json
 ```
 
@@ -157,6 +157,9 @@ Content-Type: application/json
   "password": "Password1!"
 }
 ```
+
+- `email`: 올바른 이메일 형식
+- `password`: 1자 이상 (빈 값 불가)
 
 <a id="account-login-response"></a>
 ### 로그인 Response
@@ -320,7 +323,7 @@ Authorization: Bearer <access-token>
 ### 상품 생성 Request
 
 ```http
-POST /products/
+POST /products
 Authorization: Bearer <access-token>
 Content-Type: application/json
 ```
@@ -392,7 +395,9 @@ Content-Type: application/json
 }
 ```
 
-`name`, `description`, `price` 중 하나 이상을 전달해야 합니다. 전달한 필드에만 검증 규칙이 적용됩니다.
+`name`, `description`, `price` 중 하나 이상을 전달해야 합니다. 전달한 필드에만 DTO 검증 규칙이 적용됩니다.
+
+하나도 전달하지 않으면 DTO 검증(422)이 아니라 Service 단 체크로 `400 BAD_REQUEST`가 반환됩니다.
 
 <a id="product-patch-response"></a>
 ### 상품 일부 수정 Response
