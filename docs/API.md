@@ -148,7 +148,7 @@ Content-Type: application/json
 
 - `email`: 올바른 이메일 형식
 - `password`: 공백 없이 8~100자, 영문 대문자·소문자·숫자·기타 문자(특수기호·한글·이모지 등) 중 3종류 이상
-- `name`: 1~50자
+- `name`: 1~50자 (공백만으로는 안 되며, 앞뒤 공백은 저장 시 제거됨)
 - `role`: `customer` 또는 `employee`
 - `admin` Role은 일반 회원가입 Request에서 사용할 수 없음
 
@@ -356,7 +356,7 @@ Content-Type: application/json
 }
 ```
 
-- `name`: 1~100자
+- `name`: 1~100자 (공백만으로는 안 되며, 앞뒤 공백은 저장 시 제거됨)
 - `description`: 최대 1000자
 - `price`: 0 이상
 

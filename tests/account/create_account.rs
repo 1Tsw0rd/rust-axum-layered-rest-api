@@ -50,6 +50,8 @@ async fn validation_rules_are_enforced() {
         serde_json::json!({"email": "valid2@example.com", "password": "Password123!", "name": "", "role": "customer"}),
         serde_json::json!({"email": "valid3@example.com", "password": "Password123!", "name": "a".repeat(51), "role": "customer"}),
         serde_json::json!({"email": "valid4@example.com", "password": "Password123!", "name": "홍길동", "role": "unknown"}),
+        // name이 공백만으로 구성되면 trim 후 길이가 0이 되어 실패해야 함
+        serde_json::json!({"email": "valid5@example.com", "password": "Password123!", "name": "   ", "role": "customer"}),
     ] {
         let (app, _pool, _redis) = test_app().await;
         let response = app.oneshot(json_request("POST", "/accounts", invalid)).await.unwrap();

@@ -59,22 +59,70 @@ async fn each_partial_update_shape_is_supported() {
 
 #[tokio::test]
 async fn empty_patch_and_invalid_values_are_rejected() {
-    // 시나리오 2: 수정 필드가 없거나 값이 유효하지 않으면 400/422를 반환한다.
+    // 시나리오 2: 수정 필드가 없거나 필드 값이 유효하지 않으면 400/422를 반환한다.
     let (app, pool, _redis) = test_app().await;
     seed_test_products(&pool).await;
     let token = test_token(vec![AccountRole::Admin]);
+
+    // 변경 필드 없음 → Service 단에서 400
     let response = app
         .clone()
         .oneshot(authorized_json_request(
-            "PATCH", "/products/1", &token, serde_json::json!({}),
+            "PATCH",
+            "/products/1",
+            &token,
+            serde_json::json!({}),
         ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
+    // name 빈 문자열 → 최소 길이 위반 → 422
+    let response = app
+        .clone()
+        .oneshot(authorized_json_request(
+            "PATCH",
+            "/products/1",
+            &token,
+            serde_json::json!({"name": ""}),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // name 101자 → 최대 길이 위반 → 422
+    let response = app
+        .clone()
+        .oneshot(authorized_json_request(
+            "PATCH",
+            "/products/1",
+            &token,
+            serde_json::json!({"name": "a".repeat(101)}),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // description 1001자 → 최대 길이 위반 → 422
+    let response = app
+        .clone()
+        .oneshot(authorized_json_request(
+            "PATCH",
+            "/products/1",
+            &token,
+            serde_json::json!({"description": "a".repeat(1001)}),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // price 음수 → 최소값 위반 → 422
     let response = app
         .oneshot(authorized_json_request(
-            "PATCH", "/products/1", &token, serde_json::json!({"price": -1}),
+            "PATCH",
+            "/products/1",
+            &token,
+            serde_json::json!({"price": -1}),
         ))
         .await
         .unwrap();

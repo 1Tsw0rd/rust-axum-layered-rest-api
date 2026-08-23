@@ -35,6 +35,18 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
+// 공백만으로 min 길이를 채우는 것을 막기 위해 trim한 길이로 검사
+// (실제 저장 시 service.rs에서 trim()하므로, 검증 기준도 trim 후 길이에 맞춤)
+fn validate_name(name: &str) -> Result<(), ValidationError> {
+    let len = name.trim().chars().count();
+
+    if len < 1 || len > 50 {
+        return Err(ValidationError::new("name_length"));
+    }
+
+    Ok(())
+}
+
 // admin은 request로 생성하지 못하도록 함
 fn validate_role(role: &str) -> Result<(), ValidationError> {
     let role = AccountRole::try_from(role)
@@ -59,7 +71,7 @@ pub struct CreateAccountDto {
     )]
     pub password: String,
 
-    #[validate(length(min = 1, max = 50, message = "이름은 1자 이상, 50자 이하여야 합니다."))]
+    #[validate(custom(function = "validate_name", message = "이름은 1자 이상, 50자 이하여야 합니다."))]
     pub name: String,
 
     #[validate(custom(function = "validate_role", message = "요청이 올바르지 않습니다."))]

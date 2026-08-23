@@ -50,7 +50,16 @@ async fn customer_is_forbidden_and_invalid_payload_is_rejected() {
     let admin = test_token(vec![AccountRole::Admin]);
     let invalid = serde_json::json!({"name": "", "description": "", "price": -1});
     let response = app
+        .clone()
         .oneshot(authorized_json_request("PUT", "/products/1", &admin, invalid))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    // name이 공백만으로 구성되면 다른 필드가 유효해도 단독으로 422여야 함(trim 후 길이 0)
+    let whitespace_name = serde_json::json!({"name": "   ", "description": "설명", "price": 1000});
+    let response = app
+        .oneshot(authorized_json_request("PUT", "/products/1", &admin, whitespace_name))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
