@@ -4,7 +4,7 @@
 
 ## 1. 사전 요구사항
 
-- [Rust 설치](https://www.rust-lang.org/tools/install)
+- [Rust 설치] https://www.rust-lang.org/tools/install
 
 ```bash
 # Rust 컴파일러 버전 확인
@@ -14,7 +14,7 @@ rustc --version
 cargo --version
 ```
 
-- [Docker 설치 방법](https://docs.docker.com/get-started/get-docker/)
+- [Docker 설치] https://docs.docker.com/get-started/get-docker/
 
 ```bash
 # Docker 버전 확인
@@ -168,8 +168,10 @@ cargo add serde_json --dev
 |---|---|
 | `DATABASE_URL` | PostgreSQL URL로, SQLx가 기본적으로 인식하는 환경변수 이름 |
 | `TEST_DATABASE_URL` | 통합 테스트용 PostgreSQL 연결 문자열 |
-| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | Docker PostgreSQL 초기 설정 |
+| `DB_USER` / `DB_PASSWORD` | PostgreSQL 계정 정보 |
+| `DB_HOST` | PostgreSQL 호스트 |
 | `DB_PORT` | 호스트에서 PostgreSQL에 접근할 포트 |
+| `DB_NAME` | PostgreSQL 데이터베이스 이름 |
 | `JWT_SECRET` | JWT 서명 키 |
 | `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS` | Access Token 만료 시간 |
 | `CACHE_BACKEND` | `redis` 또는 `dragonfly` |
@@ -177,8 +179,6 @@ cargo add serde_json --dev
 | `DRAGONFLY_HOST` / `DRAGONFLY_PORT` / `DRAGONFLY_PASSWORD` | Dragonfly 연결 설정 |
 | `REDIS_DB` / `DRAGONFLY_DB` | Redis/Dragonfly DB 번호(0: 개발, 1: 테스트) — 개발/테스트 환경 격리용 |
 | `RUST_LOG` | 모듈별 로그 레벨 필터 |
-
-공개 저장소에 실제 운영 비밀키를 올리지 않습니다. 학습용 값이라도 운영 환경에서는 반드시 별도 Secret 관리 방식을 사용합니다.
 
 ## 6. Docker Compose
 
@@ -227,11 +227,11 @@ FLUSHDB              현재 DB 전체 삭제(주의)
 
 단위 테스트는 DTO·Role·Permission·JWT 같은 개별 로직을 검증하고, 통합 테스트는 Axum Router에 실제 HTTP 요청을 보내 도메인 흐름을 검증합니다.
 
-통합 테스트는 `.env.test`의 `TEST_DATABASE_URL`에 연결하며, 테스트 시작 시 `accounts`, `products` 테이블을 초기화합니다.
+테스트용 PostgreSQL 및 Redis/Dragonfly 환경은 개발용 환경과 분리해서 사용됩니다.
+
+PostgreSQL은 `.env.test`의 `TEST_DATABASE_URL`에 연결하며, 테스트 시작 시 `accounts`, `products` 테이블을 초기화합니다.
 
 Redis/Dragonfly는 `.env.test`에서 테스트용 DB 번호(`1`)를 사용하여 개발용 DB(`0`)와 분리하며, 테스트 시작 시 데이터를 초기화합니다.
-
-테스트용 PostgreSQL 및 Redis/Dragonfly 환경은 개발용 환경과 분리해서 사용됩니다.
 
 ```bash
 # 전체 단위·통합 테스트
