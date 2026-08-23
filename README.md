@@ -691,10 +691,19 @@ Account 참고
 │   ├── api.rs                  ## 테스트용 앱·DB 초기화
 │   ├── account/
 │   │   ├── mod.rs
-│   │   └── create_account.rs
+│   │   ├── create_account.rs
+│   │   ├── get_me.rs
+│   │   ├── login.rs
+│   │   ├── logout.rs
+│   │   └── refresh.rs
 │   └── product/
 │       ├── mod.rs
-│       └── get_product.rs
+│       ├── create_product.rs
+│       ├── delete_product.rs
+│       ├── get_product.rs
+│       ├── get_products.rs
+│       ├── patch_product.rs
+│       └── put_product.rs
 ├── docker/
 │   ├── postgres/
 │   │   └── init/

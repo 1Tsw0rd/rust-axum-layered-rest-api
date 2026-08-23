@@ -10,19 +10,38 @@ http://127.0.0.1:8080
 
 ## API Overview
 
-| 기능 | API Method & URL | 인증 / 요청 조건 | Request | Response |
-|---|---|---|---|---|
-| 회원가입 | `POST /accounts/` | 인증 불필요 | [Request](#account-create-request) | [Response](#account-create-response) |
-| 로그인 | `POST /accounts/login` | 인증 불필요 | [Request](#account-login-request) | [Response](#account-login-response) |
-| 내 계정 조회 | `GET /accounts/me` | Access Token 필요 | [Request](#account-me-request) | [Response](#account-me-response) |
-| Access Token 재발급 | `POST /accounts/refresh` | 만료된 Access Token + Refresh Cookie 필요 | [Request](#account-refresh-request) | [Response](#account-refresh-response) |
-| 로그아웃 | `POST /accounts/logout` | Access Token + Refresh Cookie 필요 | [Request](#account-logout-request) | [Response](#account-logout-response) |
-| 상품 목록 조회 | `GET /products/?page=1&size=20&keyword=keyboard` | Access Token 필요 | [Request](#product-list-request) | [Response](#product-list-response) |
-| 상품 단건 조회 | `GET /products/{id}` | Access Token 필요 | [Request](#product-get-request) | [Response](#product-get-response) |
-| 상품 생성 | `POST /products/` | Access Token 필요 | [Request](#product-create-request) | [Response](#product-create-response) |
-| 상품 전체 수정 | `PUT /products/{id}` | Access Token 필요 | [Request](#product-put-request) | [Response](#product-put-response) |
-| 상품 일부 수정 | `PATCH /products/{id}` | Access Token 필요 | [Request](#product-patch-request) | [Response](#product-patch-response) |
-| 상품 삭제 | `DELETE /products/{id}` | Access Token 필요 | [Request](#product-delete-request) | [Response](#product-delete-response) |
+| 기능 | API Method & URL | 인증 / 요청 조건 | Request | Response | 권한 |
+|---|---|---|---|---|---|
+| 회원가입 | `POST /accounts` | 인증 불필요 | [Request](#account-create-request) | [Response](#account-create-response) | - |
+| 로그인 | `POST /accounts/login` | 인증 불필요 | [Request](#account-login-request) | [Response](#account-login-response) | - |
+| 내 계정 조회 | `GET /accounts/me` | Access Token 필요 | [Request](#account-me-request) | [Response](#account-me-response) | [확인](#role-permission-table) |
+| Access Token 재발급 | `POST /accounts/refresh` | 만료된 Access Token + Refresh Cookie 필요 | [Request](#account-refresh-request) | [Response](#account-refresh-response) | - |
+| 로그아웃 | `POST /accounts/logout` | Access Token + Refresh Cookie 필요 | [Request](#account-logout-request) | [Response](#account-logout-response) | - |
+| 상품 목록 조회 | `GET /products?page=1&size=20&keyword=keyboard` | Access Token 필요 | [Request](#product-list-request) | [Response](#product-list-response) | [확인](#role-permission-table) |
+| 상품 단건 조회 | `GET /products/{id}` | Access Token 필요 | [Request](#product-get-request) | [Response](#product-get-response) | [확인](#role-permission-table) |
+| 상품 생성 | `POST /products` | Access Token 필요 | [Request](#product-create-request) | [Response](#product-create-response) | [확인](#role-permission-table) |
+| 상품 전체 수정 | `PUT /products/{id}` | Access Token 필요 | [Request](#product-put-request) | [Response](#product-put-response) | [확인](#role-permission-table) |
+| 상품 일부 수정 | `PATCH /products/{id}` | Access Token 필요 | [Request](#product-patch-request) | [Response](#product-patch-response) | [확인](#role-permission-table) |
+| 상품 삭제 | `DELETE /products/{id}` | Access Token 필요 | [Request](#product-delete-request) | [Response](#product-delete-response) | [확인](#role-permission-table) |
+
+<a id="role-permission-table"></a>
+### Role별 API 권한
+
+`-`는 Role별 Permission 검사를 적용하지 않는 API를 의미합니다.
+
+| API | Admin | Employee | Customer |
+|---|---|---|---|
+| 회원가입 | - | - | - |
+| 로그인 | - | - | - |
+| 내 계정 조회 | ✅ | ✅ | ✅ |
+| Access Token 재발급 | - | - | - |
+| 로그아웃 | - | - | - |
+| 상품 조회(단건) | ✅ | ✅ | ✅ |
+| 상품 조회(목록) | ✅ | ✅ | ✅ |
+| 상품 생성 | ✅ | ✅ | ❌ |
+| 상품 전체 수정(PUT) | ✅ | ✅ | ❌ |
+| 상품 일부 수정(PATCH) | ✅ | ✅ | ❌ |
+| 상품 삭제 | ✅ | ❌ | ❌ |
 
 ## 공통 인증
 
@@ -112,7 +131,7 @@ Refresh Token은 로그인·재발급 응답의 `HttpOnly`, `Secure`, `SameSite=
 ### 회원가입 Request
 
 ```http
-POST /accounts/
+POST /accounts
 Content-Type: application/json
 ```
 
@@ -128,8 +147,8 @@ Content-Type: application/json
 인증이 필요하지 않습니다.
 
 - `email`: 올바른 이메일 형식
-- `password`: 8~100자, 영문 대문자·소문자·숫자·특수문자 중 3종류 이상
-- `name`: 1~50자
+- `password`: 공백 없이 8~100자, 영문 대문자·소문자·숫자·기타 문자(특수기호·한글·이모지 등) 중 3종류 이상
+- `name`: 1~50자 (공백만으로는 안 되며, 앞뒤 공백은 저장 시 제거됨)
 - `role`: `customer` 또는 `employee`
 - `admin` Role은 일반 회원가입 Request에서 사용할 수 없음
 
@@ -157,6 +176,9 @@ Content-Type: application/json
   "password": "Password1!"
 }
 ```
+
+- `email`: 올바른 이메일 형식
+- `password`: 1자 이상 (빈 값 불가)
 
 <a id="account-login-response"></a>
 ### 로그인 Response
@@ -249,11 +271,40 @@ Redis·Dragonfly의 Refresh Session과 `refresh_token` Cookie가 삭제됩니다
 
 모든 Product API는 Access Token 인증이 필요합니다.
 
+
+<a id="product-get-request"></a>
+### 상품 단건 조회 Request
+
+```http
+GET /products/{id}
+Authorization: Bearer <access-token>
+```
+
+`id`는 1 이상이어야 합니다.
+
+<a id="product-get-response"></a>
+### 상품 단건 조회 Response
+
+```json
+{
+  "success": true,
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Keyboard",
+    "description": "Mechanical keyboard",
+    "price": 10000,
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-01-01T00:00:00Z"
+  }
+}
+```
+
 <a id="product-list-request"></a>
 ### 상품 목록 조회 Request
 
 ```http
-GET /products/?page=1&size=20&keyword=keyboard
+GET /products?page=1&size=20&keyword=keyboard
 Authorization: Bearer <access-token>
 ```
 
@@ -288,39 +339,11 @@ Authorization: Bearer <access-token>
 }
 ```
 
-<a id="product-get-request"></a>
-### 상품 단건 조회 Request
-
-```http
-GET /products/{id}
-Authorization: Bearer <access-token>
-```
-
-`id`는 1 이상이어야 합니다.
-
-<a id="product-get-response"></a>
-### 상품 단건 조회 Response
-
-```json
-{
-  "success": true,
-  "status": 200,
-  "data": {
-    "id": 1,
-    "name": "Keyboard",
-    "description": "Mechanical keyboard",
-    "price": 10000,
-    "created_at": "2026-01-01T00:00:00Z",
-    "updated_at": "2026-01-01T00:00:00Z"
-  }
-}
-```
-
 <a id="product-create-request"></a>
 ### 상품 생성 Request
 
 ```http
-POST /products/
+POST /products
 Authorization: Bearer <access-token>
 Content-Type: application/json
 ```
@@ -333,7 +356,7 @@ Content-Type: application/json
 }
 ```
 
-- `name`: 2~100자
+- `name`: 1~100자 (공백만으로는 안 되며, 앞뒤 공백은 저장 시 제거됨)
 - `description`: 최대 1000자
 - `price`: 0 이상
 
@@ -392,7 +415,9 @@ Content-Type: application/json
 }
 ```
 
-`name`, `description`, `price` 중 하나 이상을 전달해야 합니다. 전달한 필드에만 검증 규칙이 적용됩니다.
+`name`, `description`, `price` 중 하나 이상을 전달해야 합니다. 전달한 필드에만 DTO 검증 규칙이 적용됩니다.
+
+하나도 전달하지 않으면 DTO 검증(422)이 아니라 Service 단 체크로 `400 BAD_REQUEST`가 반환됩니다.
 
 <a id="product-patch-response"></a>
 ### 상품 일부 수정 Response

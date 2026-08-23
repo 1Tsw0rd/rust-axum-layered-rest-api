@@ -58,13 +58,15 @@ async fn main() {
             let host = std::env::var("REDIS_HOST").expect("REDIS_HOST 환경변수 추출 실패");
             let port = std::env::var("REDIS_PORT").expect("REDIS_PORT 환경변수 추출 실패");
             let password = std::env::var("REDIS_PASSWORD").expect("REDIS_PASSWORD 환경변수 추출 실패");
-            format!("redis://:{}@{}:{}/", password, host, port)
+            let db = std::env::var("REDIS_DB").unwrap_or_else(|_| "0".to_string()); // 기본값 0 (미설정 시 기존 동작 유지)
+            format!("redis://:{}@{}:{}/{}", password, host, port, db)
         }
         "dragonfly" => {
             let host = std::env::var("DRAGONFLY_HOST").expect("DRAGONFLY_HOST 환경변수 추출 실패");
             let port = std::env::var("DRAGONFLY_PORT").expect("DRAGONFLY_PORT 환경변수 추출 실패");
             let password = std::env::var("DRAGONFLY_PASSWORD").expect("DRAGONFLY_PASSWORD 환경변수 추출 실패");
-            format!("redis://:{}@{}:{}/", password, host, port)
+            let db = std::env::var("DRAGONFLY_DB").unwrap_or_else(|_| "0".to_string());
+            format!("redis://:{}@{}:{}/{}", password, host, port, db)
         }
         _ => panic!("지원하지 않는 CACHE_BACKEND입니다: {}", cache_backend),
     };

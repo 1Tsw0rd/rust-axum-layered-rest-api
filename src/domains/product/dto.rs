@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use validator::Validate;
+use validator::{Validate, ValidationError};
 use crate::domains::product::entity::ProductEntity;
 
 // =========================================================================
@@ -33,6 +33,18 @@ use crate::domains::product::entity::ProductEntity;
 //    ClickHouse는 수정/삭제가 일어나지 않는 순수 거대 Append-Only(로그, 지표 수집) 영역에만 격리 구현하고자 함
 // =========================================================================
 
+// 공백만으로 min 길이를 채우는 것을 막기 위해 trim한 길이로 검사
+// (실제 저장 시 repository.rs에서 trim()하므로, 검증 기준도 trim 후 길이에 맞춤)
+fn validate_name(name: &str) -> Result<(), ValidationError> {
+    let len = name.trim().chars().count();
+
+    if len < 1 || len > 100 {
+        return Err(ValidationError::new("name_length"));
+    }
+
+    Ok(())
+}
+
 // ===== [요청 DTO] =====
 #[derive(Deserialize, Validate)]
 pub struct ProductPathId {
@@ -40,46 +52,7 @@ pub struct ProductPathId {
     pub id: i64,
 }
 
-// 1. [Request-POST] 제품 생성 DTO
-#[derive(Deserialize, Validate)]
-pub struct CreateProductDto {
-    #[validate(length(min = 2, max = 100, message = "제품명은 2자 이상, 100자 이하여야 합니다."))]
-    pub name: String,
-
-    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
-    pub description: String,
-
-    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
-    pub price: i64,
-}
-
-// 2. [Request-PUT] 제품 전체 수정 DTO
-#[derive(Debug, Deserialize, Validate)]
-pub struct ReplaceProductDto {
-    #[validate(length(min = 2, max = 100, message = "제품명은 2자 이상, 100자 이하여야 합니다."))]
-    pub name: String,
-
-    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
-    pub description: String,
-
-    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
-    pub price: i64,
-}
-
-// 3. [Request-PATCH] 제품 일부 수정 DTO
-#[derive(Debug, Deserialize, Validate)]
-pub struct UpdateProductDto {
-    #[validate(length(min = 2, max = 100, message = "제품명은 2자 이상, 100자 이하여야 합니다."))]
-    pub name: Option<String>,
-
-    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
-    pub description: Option<String>,
-
-    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
-    pub price: Option<i64>,
-}
-
-// 4. [Request-GET] 제품 목록 조회 Query
+// 1. [Request-GET] 제품 목록 조회 Query
 #[derive(Debug, Deserialize, Validate)]
 pub struct ProductListQuery {
     #[validate(range(min = 1, message = "page는 1 이상이어야 합니다."))]
@@ -90,6 +63,45 @@ pub struct ProductListQuery {
 
     #[validate(length(max = 20, message = "검색어는 최대 20자까지 입력할 수 있습니다."))]
     pub keyword: Option<String>,
+}
+
+// 2. [Request-POST] 제품 생성 DTO
+#[derive(Deserialize, Validate)]
+pub struct CreateProductDto {
+    #[validate(custom(function = "validate_name", message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    pub name: String,
+
+    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
+    pub description: String,
+
+    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
+    pub price: i64,
+}
+
+// 3. [Request-PUT] 제품 전체 수정 DTO
+#[derive(Debug, Deserialize, Validate)]
+pub struct ReplaceProductDto {
+    #[validate(custom(function = "validate_name", message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    pub name: String,
+
+    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
+    pub description: String,
+
+    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
+    pub price: i64,
+}
+
+// 4. [Request-PATCH] 제품 일부 수정 DTO
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateProductDto {
+    #[validate(custom(function = "validate_name", message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    pub name: Option<String>,
+
+    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
+    pub description: Option<String>,
+
+    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
+    pub price: Option<i64>,
 }
 
 // ===== [응답 DTO] =====

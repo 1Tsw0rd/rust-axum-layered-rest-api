@@ -4,7 +4,7 @@
 
 ## 1. 사전 요구사항
 
-- [Rust 설치](https://www.rust-lang.org/tools/install)
+- [Rust 설치] https://www.rust-lang.org/tools/install
 
 ```bash
 # Rust 컴파일러 버전 확인
@@ -14,7 +14,7 @@ rustc --version
 cargo --version
 ```
 
-- [Docker 설치 방법](https://docs.docker.com/get-started/get-docker/)
+- [Docker 설치] https://docs.docker.com/get-started/get-docker/
 
 ```bash
 # Docker 버전 확인
@@ -53,6 +53,9 @@ cargo test
 
 # 출력 로그까지 확인하며 테스트 실행
 cargo test -- --nocapture
+
+# 참고: 이 프로젝트의 통합 테스트는 상태를 공유하므로
+# 실제 테스트 실행 시 `cargo test -- --test-threads=1` 사용을 권장
 
 # fmt는 코드의 동작은 바꾸지 않고, 읽기 좋은 모양으로 정리하는 작업
 # 포맷 적용
@@ -165,16 +168,17 @@ cargo add serde_json --dev
 |---|---|
 | `DATABASE_URL` | PostgreSQL URL로, SQLx가 기본적으로 인식하는 환경변수 이름 |
 | `TEST_DATABASE_URL` | 통합 테스트용 PostgreSQL 연결 문자열 |
-| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | Docker PostgreSQL 초기 설정 |
+| `DB_USER` / `DB_PASSWORD` | PostgreSQL 계정 정보 |
+| `DB_HOST` | PostgreSQL 호스트 |
 | `DB_PORT` | 호스트에서 PostgreSQL에 접근할 포트 |
+| `DB_NAME` | PostgreSQL 데이터베이스 이름 |
 | `JWT_SECRET` | JWT 서명 키 |
 | `JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS` | Access Token 만료 시간 |
 | `CACHE_BACKEND` | `redis` 또는 `dragonfly` |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | Redis 연결 설정 |
 | `DRAGONFLY_HOST` / `DRAGONFLY_PORT` / `DRAGONFLY_PASSWORD` | Dragonfly 연결 설정 |
+| `REDIS_DB` / `DRAGONFLY_DB` | Redis/Dragonfly DB 번호(0: 개발, 1: 테스트) — 개발/테스트 환경 격리용 |
 | `RUST_LOG` | 모듈별 로그 레벨 필터 |
-
-공개 저장소에 실제 운영 비밀키를 올리지 않습니다. 학습용 값이라도 운영 환경에서는 반드시 별도 Secret 관리 방식을 사용합니다.
 
 ## 6. Docker Compose
 
@@ -201,15 +205,16 @@ docker compose down
 
 ```bash
 # Redis
-docker compose exec redis redis-cli -a "$REDIS_PASSWORD"
+docker compose exec redis redis-cli -a "$REDIS_PASSWORD" -n "$REDIS_DB"
 
 # Dragonfly
-docker compose exec dragonfly redis-cli -a "$DRAGONFLY_PASSWORD"
+docker compose exec dragonfly redis-cli -a "$DRAGONFLY_PASSWORD" -n "$DRAGONFLY_DB"
 ```
 
 자주 사용하는 명령:
 
 ```text
+SELECT <DB번호>       DB 선택(0: 개발DB, 1: 테스트DB)
 PING                 연결 확인
 SCAN 0               키 목록을 안전하게 순회
 GET <key>            문자열 값 조회
@@ -222,8 +227,11 @@ FLUSHDB              현재 DB 전체 삭제(주의)
 
 단위 테스트는 DTO·Role·Permission·JWT 같은 개별 로직을 검증하고, 통합 테스트는 Axum Router에 실제 HTTP 요청을 보내 도메인 흐름을 검증합니다.
 
-통합 테스트는 `.env.test`의 `TEST_DATABASE_URL`에 연결하고 테스트용 데이터베이스에서 테스트 시작 전에 `accounts`, `products` 테이블을 비웁니다.
-테스트용 데이터베이스는 개발용 데이터베이스와 분리해야 합니다.
+테스트용 PostgreSQL 및 Redis/Dragonfly 환경은 개발용 환경과 분리해서 사용됩니다.
+
+PostgreSQL은 `.env.test`의 `TEST_DATABASE_URL`에 연결하며, 테스트 시작 시 `accounts`, `products` 테이블을 초기화합니다.
+
+Redis/Dragonfly는 `.env.test`에서 테스트용 DB 번호(`1`)를 사용하여 개발용 DB(`0`)와 분리하며, 테스트 시작 시 데이터를 초기화합니다.
 
 ```bash
 # 전체 단위·통합 테스트
@@ -236,6 +244,7 @@ cargo test --lib
 # src 내부 특정 모듈 단위 테스트
 cargo test --lib common::auth::jwt
 cargo test --lib common::auth::authorization
+cargo test --lib common::auth::extractor
 cargo test --lib common::auth::permission
 cargo test --lib common::auth::role
 cargo test --lib common::auth::refresh_token
@@ -267,7 +276,7 @@ cargo test --lib common::auth::jwt::tests::create_and_verify_success
 cargo test --test api account::login -- --test-threads=1 --nocapture
 ```
 
-`cargo test`는 기본적으로 테스트를 병렬 실행합니다. 이 프로젝트는 테스트마다 PostgreSQL 데이터를 초기화하고 Redis를 공유하므로, 전체 테스트와 API 통합 테스트는 `--test-threads=1`을 함께 사용합니다.
+`cargo test`는 기본적으로 테스트를 병렬 실행합니다. 이 프로젝트는 테스트마다 PostgreSQL과 Redis 데이터를 초기화하므로, 전체 테스트와 API 통합 테스트는 `--test-threads=1`을 함께 사용합니다.
 
 ## 8. 브랜치와 커밋 규칙
 
