@@ -18,7 +18,7 @@ use rust_axum_layered_rest_api::state::AppState;
 pub mod product;
 pub mod account;
 
-pub async fn cleanup_test_db(pool: &PgPool) {
+async fn cleanup_test_db(pool: &PgPool) {
     sqlx::query!(
         r#"
         TRUNCATE TABLE accounts, products

@@ -46,7 +46,7 @@ async fn customer_is_forbidden() {
 #[tokio::test]
 async fn validation_and_json_errors_are_rejected() {
     // 시나리오 3: 필드 규칙 위반은 422, JSON/타입 오류는 400을 반환한다.
-    let invalid = serde_json::json!({ "name": "a", "description": "", "price": -1 });
+    let invalid = serde_json::json!({ "name": "", "description": "", "price": -1 });
     let (app, _pool, _redis) = test_app().await;
     let token = test_token(vec![AccountRole::Admin]);
     let response = app

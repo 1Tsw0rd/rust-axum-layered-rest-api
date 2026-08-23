@@ -49,6 +49,7 @@ async fn each_partial_update_shape_is_supported() {
         assert_eq!(response.status(), StatusCode::OK);
         let after = response_json(response).await;
 
+        // 수정한 필드는 변경되었는지, 수정하지 않은 필드는 원래 값(before) 그대로인지 확인
         for field in ["name", "description", "price"] {
             let expected = patch_body.get(field).cloned().unwrap_or(before[field].clone());
             assert_eq!(after["data"][field], expected, "id={id} field={field}");

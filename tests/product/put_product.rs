@@ -48,7 +48,7 @@ async fn customer_is_forbidden_and_invalid_payload_is_rejected() {
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     let admin = test_token(vec![AccountRole::Admin]);
-    let invalid = serde_json::json!({"name": "a", "description": "", "price": -1});
+    let invalid = serde_json::json!({"name": "", "description": "", "price": -1});
     let response = app
         .oneshot(authorized_json_request("PUT", "/products/1", &admin, invalid))
         .await

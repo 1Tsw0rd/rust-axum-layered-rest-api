@@ -40,46 +40,7 @@ pub struct ProductPathId {
     pub id: i64,
 }
 
-// 1. [Request-POST] 제품 생성 DTO
-#[derive(Deserialize, Validate)]
-pub struct CreateProductDto {
-    #[validate(length(min = 2, max = 100, message = "제품명은 2자 이상, 100자 이하여야 합니다."))]
-    pub name: String,
-
-    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
-    pub description: String,
-
-    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
-    pub price: i64,
-}
-
-// 2. [Request-PUT] 제품 전체 수정 DTO
-#[derive(Debug, Deserialize, Validate)]
-pub struct ReplaceProductDto {
-    #[validate(length(min = 2, max = 100, message = "제품명은 2자 이상, 100자 이하여야 합니다."))]
-    pub name: String,
-
-    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
-    pub description: String,
-
-    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
-    pub price: i64,
-}
-
-// 3. [Request-PATCH] 제품 일부 수정 DTO
-#[derive(Debug, Deserialize, Validate)]
-pub struct UpdateProductDto {
-    #[validate(length(min = 2, max = 100, message = "제품명은 2자 이상, 100자 이하여야 합니다."))]
-    pub name: Option<String>,
-
-    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
-    pub description: Option<String>,
-
-    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
-    pub price: Option<i64>,
-}
-
-// 4. [Request-GET] 제품 목록 조회 Query
+// 1. [Request-GET] 제품 목록 조회 Query
 #[derive(Debug, Deserialize, Validate)]
 pub struct ProductListQuery {
     #[validate(range(min = 1, message = "page는 1 이상이어야 합니다."))]
@@ -90,6 +51,45 @@ pub struct ProductListQuery {
 
     #[validate(length(max = 20, message = "검색어는 최대 20자까지 입력할 수 있습니다."))]
     pub keyword: Option<String>,
+}
+
+// 2. [Request-POST] 제품 생성 DTO
+#[derive(Deserialize, Validate)]
+pub struct CreateProductDto {
+    #[validate(length(min = 1, max = 100, message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    pub name: String,
+
+    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
+    pub description: String,
+
+    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
+    pub price: i64,
+}
+
+// 3. [Request-PUT] 제품 전체 수정 DTO
+#[derive(Debug, Deserialize, Validate)]
+pub struct ReplaceProductDto {
+    #[validate(length(min = 1, max = 100, message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    pub name: String,
+
+    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
+    pub description: String,
+
+    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
+    pub price: i64,
+}
+
+// 4. [Request-PATCH] 제품 일부 수정 DTO
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateProductDto {
+    #[validate(length(min = 1, max = 100, message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    pub name: Option<String>,
+
+    #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
+    pub description: Option<String>,
+
+    #[validate(range(min = 0, message = "가격은 0 이상이어야 합니다."))]
+    pub price: Option<i64>,
 }
 
 // ===== [응답 DTO] =====

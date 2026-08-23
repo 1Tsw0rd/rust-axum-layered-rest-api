@@ -36,7 +36,8 @@ http://127.0.0.1:8080
 | 내 계정 조회 | ✅ | ✅ | ✅ |
 | Access Token 재발급 | - | - | - |
 | 로그아웃 | - | - | - |
-| 상품 조회(단건/목록) | ✅ | ✅ | ✅ |
+| 상품 조회(단건) | ✅ | ✅ | ✅ |
+| 상품 조회(목록) | ✅ | ✅ | ✅ |
 | 상품 생성 | ✅ | ✅ | ❌ |
 | 상품 전체 수정(PUT) | ✅ | ✅ | ❌ |
 | 상품 일부 수정(PATCH) | ✅ | ✅ | ❌ |
@@ -146,7 +147,7 @@ Content-Type: application/json
 인증이 필요하지 않습니다.
 
 - `email`: 올바른 이메일 형식
-- `password`: 8~100자, 영문 대문자·소문자·숫자·특수문자 중 3종류 이상
+- `password`: 공백 없이 8~100자, 영문 대문자·소문자·숫자·기타 문자(특수기호·한글·이모지 등) 중 3종류 이상
 - `name`: 1~50자
 - `role`: `customer` 또는 `employee`
 - `admin` Role은 일반 회원가입 Request에서 사용할 수 없음
@@ -270,6 +271,35 @@ Redis·Dragonfly의 Refresh Session과 `refresh_token` Cookie가 삭제됩니다
 
 모든 Product API는 Access Token 인증이 필요합니다.
 
+
+<a id="product-get-request"></a>
+### 상품 단건 조회 Request
+
+```http
+GET /products/{id}
+Authorization: Bearer <access-token>
+```
+
+`id`는 1 이상이어야 합니다.
+
+<a id="product-get-response"></a>
+### 상품 단건 조회 Response
+
+```json
+{
+  "success": true,
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Keyboard",
+    "description": "Mechanical keyboard",
+    "price": 10000,
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-01-01T00:00:00Z"
+  }
+}
+```
+
 <a id="product-list-request"></a>
 ### 상품 목록 조회 Request
 
@@ -309,34 +339,6 @@ Authorization: Bearer <access-token>
 }
 ```
 
-<a id="product-get-request"></a>
-### 상품 단건 조회 Request
-
-```http
-GET /products/{id}
-Authorization: Bearer <access-token>
-```
-
-`id`는 1 이상이어야 합니다.
-
-<a id="product-get-response"></a>
-### 상품 단건 조회 Response
-
-```json
-{
-  "success": true,
-  "status": 200,
-  "data": {
-    "id": 1,
-    "name": "Keyboard",
-    "description": "Mechanical keyboard",
-    "price": 10000,
-    "created_at": "2026-01-01T00:00:00Z",
-    "updated_at": "2026-01-01T00:00:00Z"
-  }
-}
-```
-
 <a id="product-create-request"></a>
 ### 상품 생성 Request
 
@@ -354,7 +356,7 @@ Content-Type: application/json
 }
 ```
 
-- `name`: 2~100자
+- `name`: 1~100자
 - `description`: 최대 1000자
 - `price`: 0 이상
 

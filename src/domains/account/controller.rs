@@ -82,6 +82,24 @@ pub async fn login(
     Ok(token_response(jar, result))
 }
 
+// GET: 현재 로그인한 계정 조회
+#[axum::debug_handler]
+pub async fn get_me(
+    State(account_service): State<Arc<AccountService>>,
+    AuthenticatedUser { account_id, .. }: AuthenticatedUser,
+) -> Result<impl IntoResponse, AppError> {
+    // AuthenticatedUser Extractor가 Authorization 헤더의 JWT를 먼저 검증 수행
+    // 검증이 성공하면 JWT의 sub(account_id)를 사용할 수 있음
+    let account = account_service
+        .get_me(account_id)
+        .await?;
+
+    Ok(ApiResponse::success_with_data(
+        StatusCode::OK,
+        account,
+    ))
+}
+
 // POST: Access Token 재발급
 #[axum::debug_handler]
 pub async fn refresh(
@@ -124,24 +142,6 @@ pub async fn refresh(
     let result = account_service.refresh(access_token, refresh_token).await?;
 
     Ok(token_response(jar, result))
-}
-
-// GET: 현재 로그인한 계정 조회
-#[axum::debug_handler]
-pub async fn get_me(
-    State(account_service): State<Arc<AccountService>>,
-    AuthenticatedUser { account_id, .. }: AuthenticatedUser,
-) -> Result<impl IntoResponse, AppError> {
-    // AuthenticatedUser Extractor가 Authorization 헤더의 JWT를 먼저 검증 수행
-    // 검증이 성공하면 JWT의 sub(account_id)를 사용할 수 있음
-    let account = account_service
-        .get_me(account_id)
-        .await?;
-
-    Ok(ApiResponse::success_with_data(
-        StatusCode::OK,
-        account,
-    ))
 }
 
 // POST: 로그아웃

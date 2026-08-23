@@ -26,6 +26,23 @@ pub async fn get_product(
     Ok(ApiResponse::success_with_data(StatusCode::OK, product))
 }
 
+// GET: 제품 목록 조회
+#[axum::debug_handler]
+pub async fn get_products(
+    State(product_service): State<Arc<ProductService>>,
+    ValidatedQuery(query): ValidatedQuery<ProductListQuery>,
+) -> Result<impl IntoResponse, AppError> {
+    let result = product_service.get_products(&query).await?;
+    Ok(ApiResponse::success_with_list(
+        StatusCode::OK,
+        result.data,
+        query.page, // page
+        query.size, // size
+        result.count,   // count
+        result.total, // total
+    ))
+}
+
 // POST: 제품 생성
 #[axum::debug_handler]
 pub async fn create_product(
@@ -66,21 +83,4 @@ pub async fn delete_product(
 ) -> Result<impl IntoResponse, AppError> {
     product_service.delete_product(params.id).await?;
     Ok(ApiResponse::success(StatusCode::OK))
-}
-
-// GET: 제품 목록 조회
-#[axum::debug_handler]
-pub async fn get_products(
-    State(product_service): State<Arc<ProductService>>,
-    ValidatedQuery(query): ValidatedQuery<ProductListQuery>,
-) -> Result<impl IntoResponse, AppError> {
-    let result = product_service.get_products(&query).await?;
-    Ok(ApiResponse::success_with_list(
-        StatusCode::OK,
-        result.data,
-        query.page, // page
-        query.size, // size
-        result.count,   // count
-        result.total, // total
-    ))
 }
