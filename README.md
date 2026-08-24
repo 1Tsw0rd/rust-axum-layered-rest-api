@@ -734,7 +734,8 @@ Account 참고
 ├── LICENSE
 ├── .env
 ├── .env.test
-└── .gitignore
+├── .gitignore               ## git 추적에서 제외할 파일/폴더 목록
+└── .gitattributes           ## git이 파일별로 어떻게 다룰지(줄바꿈, 병합 방식 등) 정의하는 설정 파일
 ```
 
 ---
