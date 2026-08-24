@@ -1,0 +1,71 @@
+# docker compose logs -f redis
+# docker compose logs -f dragonfly
+# docker compose logs -f postgres
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: axum-postgres
+    restart: unless-stopped # 컨테이너가 중지되었을 때 자동으로 재시작하도록 설정
+    environment:
+      POSTGRES_USER: ${DB_USER:?DB_USER가 설정되지 않았습니다}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD가 설정되지 않았습니다}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME이 설정되지 않았습니다}
+    ports:
+      - "${DB_PORT:?DB_PORT가 설정되지 않았습니다}:5432"
+    volumes:
+      - ./docker/postgres/data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d # 초기화 폴더 마운트: 정렬된 순서대로 sql 실행
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:8-alpine
+    container_name: axum-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:?REDIS_PORT가 설정되지 않았습니다}:6379"
+    # 재시작 시 데이터를 유지하고 싶은 경우 아래 volumes, command 활성화
+    # volumes:
+    #   - ./docker/redis/data:/data
+    # command:
+    #   [
+    #     "redis-server",
+    #     "--appendonly", "yes", # 쓰기 명령을 AOF 파일에 기록하여 재시작 시 데이터 복구에 활용
+    #     "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD가 설정되지 않았습니다}" # Redis 서버 접속 비밀번호 설정
+    #   ]
+    # 재시작 시 데이터를 초기화하고 싶다면 아래 tmpfs, command 활성화
+    tmpfs: # 컨테이너가 재시작되면 데이터가 사라지는 메모리 저장소
+     - /data
+    command:
+      [
+        "redis-server",
+        "--save", "",  # RDB 스냅샷 저장을 비활성화
+        "--appendonly", "no", # AOF 변경 로그 저장을 비활성화
+        "--requirepass", "${REDIS_PASSWORD}"
+      ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+# 시범적
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: axum-dragonfly
+    restart: unless-stopped
+    ulimits:
+      memlock: -1 # 프로세스의 메모리 잠금(memlock) 제한 설정, -1은 무제한, 바이트 단위
+    ports:
+      - "${DRAGONFLY_PORT:?DRAGONFLY_PORT가 설정되지 않았습니다}:6379"
+    # 재시작 시 데이터를 유지하고 싶은 경우 아래 volumes 활성화
+    # volumes:
+    #   - ./docker/dragonfly/data:/data
+    # 재시작 시 데이터를 초기화하고 싶다면 아래 tmpfs 활성화
+    tmpfs:
+      - /data
+    command:
+      [
+        "--requirepass=${DRAGONFLY_PASSWORD:?DRAGONFLY_PASSWORD가 설정되지 않았습니다}"
+      ]

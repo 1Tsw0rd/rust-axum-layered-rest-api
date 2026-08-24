@@ -1,0 +1,19 @@
+# rustfmt 설정 파일: 프로젝트 전체에 적용되는 Rust 코드 포맷 규칙을 정의함
+#   (Cargo.toml과 같은 위치, 프로젝트 루트에 둠)
+#
+# 관련 명령어:
+#   cargo fmt         : 이 설정대로 코드를 실제로 재포맷함
+#   cargo fmt --check : 재포맷 없이, 이미 규칙에 맞는지만 검사 (CI에서 사용)
+#
+# 특정 아이템만 예외 처리하려면 바로 위에 #[rustfmt::skip] 부착
+# (예: src/common/auth/role.rs의 AccountRole)
+
+# 프로젝트 edition과 동일하게 맞춤 (Cargo.toml의 edition = "2024")
+edition = "2024"
+ 
+# 한 줄 최대 길이. 기본값(100)을 그대로 명시적으로 설정
+max_width = 100
+ 
+# 줄바꿈 문자를 Unix(LF)로 통일 (Windows에서 작업해도 CRLF로 안 바뀌게 고정)
+newline_style = "Unix"
+ 
