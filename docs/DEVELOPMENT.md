@@ -68,6 +68,7 @@ cargo fmt -- --check
 # 기본 정적 분석
 cargo clippy
 # 전체 대상과 모든 feature를 엄격하게 검사할 때
+# -- -D(deny) warnings: warning 레벨로 뜨는 모든 lint를 error로 격상
 cargo clippy --all-targets --all-features -- -D warnings
 ```
 

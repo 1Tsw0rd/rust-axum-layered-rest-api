@@ -1,7 +1,4 @@
-use redis::{
-    aio::ConnectionManager,
-    Client,
-};
+use redis::{Client, aio::ConnectionManager};
 
 use crate::common::error::AppError;
 
@@ -37,15 +34,9 @@ clone() (ConnectionManager의 핸들을 복제하여 Redis 작업에 사용)
 */
 impl RedisClient {
     pub async fn new(client: Client) -> Result<Self, AppError> {
-        let connection = client
-            .get_connection_manager()
-            .await
-            .map_err(|err| {
-                AppError::Internal(format!(
-                    "Redis/Dragonfly 연결에 실패했습니다: {}",
-                    err
-                ))
-            })?;
+        let connection = client.get_connection_manager().await.map_err(|err| {
+            AppError::Internal(format!("Redis/Dragonfly 연결에 실패했습니다: {}", err))
+        })?;
 
         Ok(Self { connection })
     }
@@ -56,25 +47,32 @@ impl RedisClient {
         let _: String = redis::cmd("PING")
             .query_async(&mut connection)
             .await
-            .map_err(|err| {
-                AppError::Internal(format!(
-                    "Redis PING에 실패했습니다: {}",
-                    err
-                ))
-            })?;
+            .map_err(|err| AppError::Internal(format!("Redis PING에 실패했습니다: {}", err)))?;
 
         Ok(())
+    }
+
+    // Key에 저장된 값을 조회
+    // redis-cli GET key
+    pub async fn get(&self, key: &str) -> Result<Option<String>, AppError> {
+        let mut connection = self.connection.clone();
+
+        // Some(value)는 key 존재, None는 Key 없음 또는 TTL 만료
+        // key가 있다면 value를 반환
+        redis::cmd("GET")
+            .arg(key)
+            .query_async(&mut connection)
+            .await
+            .map_err(|err| AppError::Internal(format!("Redis 데이터 조회에 실패했습니다: {}", err)))
     }
 
     // Key-Value 데이터를 저장하고 TTL을 초 단위로 설정
     // redis-cli SET key value EX ttl
     // EX는 만료시간을 초 단위로 설정
-    pub async fn set(
-        &self,
-        key: &str,
-        value: i64,
-        ttl_seconds: u64,
-    ) -> Result<(), AppError> {
+    // 현재는 저장 로직이 모두 atomic_pipeline(MULTI/EXEC)으로 처리되어 실사용처는 없지만,
+    // pipeline이 필요 없는 단건 SET이 필요해질 상황(예: 캐시 워밍업, 단발성 값 저장)을 위해 남겨둠
+    #[allow(dead_code)]
+    pub async fn set(&self, key: &str, value: i64, ttl_seconds: u64) -> Result<(), AppError> {
         let mut connection = self.connection.clone();
 
         redis::cmd("SET")
@@ -85,43 +83,18 @@ impl RedisClient {
             .query_async::<()>(&mut connection)
             .await
             .map_err(|err| {
-                AppError::Internal(format!(
-                    "Redis 데이터 저장에 실패했습니다: {}",
-                    err
-                ))
+                AppError::Internal(format!("Redis 데이터 저장에 실패했습니다: {}", err))
             })?;
         // 잘 성공했다고 Ok 반환
         Ok(())
     }
 
-    // Key에 저장된 값을 조회
-    // redis-cli GET key
-    pub async fn get(
-        &self,
-        key: &str,
-    ) -> Result<Option<String>, AppError> {
-        let mut connection = self.connection.clone();
-
-        // Some(value)는 key 존재, None는 Key 없음 또는 TTL 만료
-        // key가 있다면 value를 반환
-        redis::cmd("GET")
-            .arg(key)
-            .query_async(&mut connection)
-            .await
-            .map_err(|err| {
-                AppError::Internal(format!(
-                    "Redis 데이터 조회에 실패했습니다: {}",
-                    err
-                ))
-            })
-    }
-
     // Key에 저장된 데이터를 삭제
     // redis-cli DEL key
-    pub async fn delete(
-        &self,
-        key: &str,
-    ) -> Result<(), AppError> {
+    // 현재는 삭제 로직이 모두 atomic_pipeline(MULTI/EXEC)으로 처리되어 실사용처는 없지만,
+    // pipeline이 필요 없는 단건 DEL이 필요해질 상황을 위해 남겨둠
+    #[allow(dead_code)]
+    pub async fn delete(&self, key: &str) -> Result<(), AppError> {
         let mut connection = self.connection.clone();
 
         redis::cmd("DEL")
@@ -129,10 +102,7 @@ impl RedisClient {
             .query_async::<()>(&mut connection)
             .await
             .map_err(|err| {
-                AppError::Internal(format!(
-                    "Redis 데이터 삭제에 실패했습니다: {}",
-                    err
-                ))
+                AppError::Internal(format!("Redis 데이터 삭제에 실패했습니다: {}", err))
             })?;
         // 잘 성공했다고 Ok 반환
         Ok(())
@@ -163,15 +133,12 @@ impl RedisClient {
             ├── query_async() → 결과를 받고 싶을 때
             └── exec_async()  → 결과가 필요 없을 때
         */
-        pipeline
-            .exec_async(&mut connection)
-            .await
-            .map_err(|err| {
-                AppError::Internal(format!(
-                    "Redis 원자적 파이프라인 실행에 실패했습니다: {}",
-                    err
-                ))
-            })?;
+        pipeline.exec_async(&mut connection).await.map_err(|err| {
+            AppError::Internal(format!(
+                "Redis 원자적 파이프라인 실행에 실패했습니다: {}",
+                err
+            ))
+        })?;
 
         Ok(())
     }

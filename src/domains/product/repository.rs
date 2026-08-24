@@ -1,8 +1,10 @@
 use sqlx::PgPool;
 
 use crate::common::error::AppError;
+use crate::domains::product::dto::{
+    CreateProductDto, ProductListQuery, ReplaceProductDto, UpdateProductDto,
+};
 use crate::domains::product::entity::ProductEntity;
-use crate::domains::product::dto::{CreateProductDto, ReplaceProductDto, UpdateProductDto, ProductListQuery};
 
 // ===== 레포지토리 전용 입력 파라미터 구조체 =====
 #[derive(Debug)]
@@ -98,14 +100,14 @@ impl ProductRepository {
         let entity = sqlx::query_as!(
             ProductEntity,
             r#"
-            SELECT 
+            SELECT
                 id,
                 name,
                 description,
                 price,
                 created_at,
                 updated_at
-            FROM products 
+            FROM products
             WHERE id = $1
             "#,
             id
@@ -113,7 +115,9 @@ impl ProductRepository {
         .fetch_one(&self.db_pool) // 1건만 조회
         .await
         .map_err(|e| match e {
-            sqlx::Error::RowNotFound => AppError::NotFound(format!("ID {}번 제품을 찾을 수 없습니다.", id)), // 여기서만 따로 사용
+            sqlx::Error::RowNotFound => {
+                AppError::NotFound(format!("ID {}번 제품을 찾을 수 없습니다.", id))
+            } // 여기서만 따로 사용
             _ => e.into(), // From<sqlx::Error> 사용
         })?;
 
@@ -121,15 +125,12 @@ impl ProductRepository {
     }
 
     // 조회 조건에 맞는 products row 개수 전체 조회
-    pub async fn count(
-        &self,
-        query: &ProductListQuery,
-    ) -> Result<i64, AppError> {
+    pub async fn count(&self, query: &ProductListQuery) -> Result<i64, AppError> {
         let mut builder = sqlx::QueryBuilder::new(
             r#"
             SELECT count(*)
             FROM products
-            "#
+            "#,
         );
 
         Self::apply_product_filters(&mut builder, query);
@@ -163,7 +164,7 @@ impl ProductRepository {
 
         검색 조건이 적고 SQL 구조가 단순한 경우에는 좋은 선택
         */
-        
+
         /*
         if let Some(keyword) = &query.keyword {
 
@@ -218,7 +219,7 @@ impl ProductRepository {
             Ok(products)
         }
         */
-        
+
         /*
         =====================================================
         방법 2. QueryBuilder 방식 (현재 사용)
@@ -245,7 +246,7 @@ impl ProductRepository {
                 created_at,
                 updated_at
             FROM products
-            "#
+            "#,
         );
 
         // Product 목록 조회 공통 필터 적용
@@ -262,9 +263,9 @@ impl ProductRepository {
         builder.push_bind((query.page - 1) * query.size);
 
         let products = builder
-        .build_query_as::<ProductEntity>()
-        .fetch_all(&self.db_pool)
-        .await?;
+            .build_query_as::<ProductEntity>()
+            .fetch_all(&self.db_pool)
+            .await?;
 
         Ok(products)
 
@@ -330,12 +331,12 @@ impl ProductRepository {
 
         Ok(entities)
         */
-
     }
 
     // 제품 생성
-    pub async fn save(&self, params: CreateProductParams) -> Result<(), AppError> { 
-        sqlx::query!( // query!()는 쿼리 결과를 Entity로 매핑하지 않을 때 사용(컴파일 타임 SQL 검사 + 파라미터 타입 검사)
+    pub async fn save(&self, params: CreateProductParams) -> Result<(), AppError> {
+        // query!()는 쿼리 결과를 Entity로 매핑하지 않을 때 사용(컴파일 타임 SQL 검사 + 파라미터 타입 검사)
+        sqlx::query!(
             r#"
             INSERT INTO products (
                 name,
@@ -374,9 +375,7 @@ impl ProductRepository {
         .await?;
 
         if result.rows_affected() == 0 {
-            return Err(AppError::NotFound(
-                "대상을 찾을 수 없습니다.".into()
-            ));
+            return Err(AppError::NotFound("대상을 찾을 수 없습니다.".into()));
         }
 
         Ok(())
@@ -396,28 +395,22 @@ impl ProductRepository {
             separated.push_bind_unseparated(name);
             has_set = true
         }
-        
-        if let Some(description) = params.description  {
+
+        if let Some(description) = params.description {
             separated.push("description = ");
             separated.push_bind_unseparated(description);
             has_set = true
         }
-        
+
         if let Some(price) = params.price {
             separated.push("price = ");
             separated.push_bind_unseparated(price);
             has_set = true
         }
 
-        // separated가 builder를 가변 참조로 빌리고 있으므로,
-        // drop하여 borrow를 종료한 뒤 다음 로직에서 builder를 이어서 재사용 할 수 있게 함
-        drop(separated);
-
         // 서비스에서 검사하고 있긴 하지만, 방어코드로 남김
         if !has_set {
-            return Err(AppError::BadRequest(
-                "변경할 필드가 없습니다.".into()
-            ))
+            return Err(AppError::BadRequest("변경할 필드가 없습니다.".into()));
         }
 
         builder.push(" WHERE id = ");
@@ -426,9 +419,7 @@ impl ProductRepository {
         // 쿼리 실행
         let result = builder.build().execute(&self.db_pool).await?;
         if result.rows_affected() == 0 {
-            return Err(AppError::NotFound(
-                "대상을 찾을 수 없습니다.".into()
-            ));
+            return Err(AppError::NotFound("대상을 찾을 수 없습니다.".into()));
         }
 
         Ok(())
@@ -446,9 +437,7 @@ impl ProductRepository {
         .await?;
 
         if result.rows_affected() == 0 {
-            return Err(AppError::NotFound(
-                "삭제 대상을 찾을 수 없습니다.".into()
-            ));
+            return Err(AppError::NotFound("삭제 대상을 찾을 수 없습니다.".into()));
         }
 
         Ok(())

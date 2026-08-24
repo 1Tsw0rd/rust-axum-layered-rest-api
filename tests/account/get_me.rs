@@ -1,7 +1,9 @@
 use axum::http::StatusCode;
 use tower::ServiceExt;
 
-use super::super::{authorized_request, empty_request, register_account, response_json, test_app, test_token};
+use super::super::{
+    authorized_request, empty_request, register_account, response_json, test_app, test_token,
+};
 use rust_axum_layered_rest_api::common::auth::role::AccountRole;
 
 #[tokio::test]
@@ -32,7 +34,11 @@ async fn missing_or_invalid_token_is_unauthorized() {
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
     let response = app
-        .oneshot(authorized_request("GET", "/accounts/me", "old.invalid.token"))
+        .oneshot(authorized_request(
+            "GET",
+            "/accounts/me",
+            "old.invalid.token",
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);

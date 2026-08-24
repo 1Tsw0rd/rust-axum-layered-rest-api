@@ -1,9 +1,7 @@
 use axum::http::StatusCode;
 use tower::ServiceExt;
 
-use super::super::{
-    authorized_json_request, response_json, test_app, test_token,
-};
+use super::super::{authorized_json_request, response_json, test_app, test_token};
 use rust_axum_layered_rest_api::common::auth::role::AccountRole;
 
 fn body() -> serde_json::Value {
@@ -50,16 +48,27 @@ async fn validation_and_json_errors_are_rejected() {
     let (app, _pool, _redis) = test_app().await;
     let token = test_token(vec![AccountRole::Admin]);
     let response = app
-        .oneshot(authorized_json_request("POST", "/products", &token, invalid))
+        .oneshot(authorized_json_request(
+            "POST",
+            "/products",
+            &token,
+            invalid,
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
 
     // name이 공백만으로 구성되면 다른 필드가 유효해도 단독으로 422여야 함(trim 후 길이 0)
-    let whitespace_name = serde_json::json!({ "name": "   ", "description": "설명", "price": 1000 });
+    let whitespace_name =
+        serde_json::json!({ "name": "   ", "description": "설명", "price": 1000 });
     let (app, _pool, _redis) = test_app().await;
     let response = app
-        .oneshot(authorized_json_request("POST", "/products", &token, whitespace_name))
+        .oneshot(authorized_json_request(
+            "POST",
+            "/products",
+            &token,
+            whitespace_name,
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
@@ -68,7 +77,10 @@ async fn validation_and_json_errors_are_rejected() {
     let request = axum::http::Request::builder()
         .method("POST")
         .uri("/products")
-        .header("authorization", format!("Bearer {}", test_token(vec![AccountRole::Admin])))
+        .header(
+            "authorization",
+            format!("Bearer {}", test_token(vec![AccountRole::Admin])),
+        )
         .header("content-type", "application/json")
         .body(axum::body::Body::from(r#"{"name": 1}"#))
         .unwrap();
@@ -91,7 +103,10 @@ async fn created_product_is_returned_by_list() {
 
     let response = app
         .oneshot(authorized_json_request(
-            "GET", "/products?page=1&size=100&keyword=TestProductXYZ", &token, serde_json::json!({}),
+            "GET",
+            "/products?page=1&size=100&keyword=TestProductXYZ",
+            &token,
+            serde_json::json!({}),
         ))
         .await
         .unwrap();

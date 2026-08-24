@@ -1,16 +1,13 @@
 use std::sync::Arc;
 
+use crate::common::auth::{jwt::JwtConfig, role::AccountRole};
+use crate::common::error::AppError;
+use crate::domains::account::service::AccountService;
 use axum::{
     extract::FromRef, // FromRef: Router State에서 필요한 타입(여기선 Arc<AccountService>)을 꺼내기 위한 trait
     extract::FromRequestParts,
-    http::{header::AUTHORIZATION, request::Parts, HeaderValue},
+    http::{HeaderValue, header::AUTHORIZATION, request::Parts},
 };
-use crate::common::auth::{
-    jwt::JwtConfig,
-    role::AccountRole,
-};
-use crate::common::error::AppError;
-use crate::domains::account::service::AccountService;
 
 // Jwt 인증 완료된 사용자 정보
 #[derive(Debug, Clone)]
@@ -29,16 +26,12 @@ pub fn authenticate(
     // 1. Authorization 헤더 추출
     let auth_header = auth_header
         .ok_or_else(|| {
-            tracing::warn!(
-                "인증 실패: Authorization Header가 없습니다."
-            );
+            tracing::warn!("인증 실패: Authorization Header가 없습니다.");
             AppError::Unauthorized
         })?
         .to_str()
         .map_err(|_| {
-            tracing::warn!(
-                "인증 실패: Authorization Header를 문자열로 변환할 수 없습니다."
-            );
+            tracing::warn!("인증 실패: Authorization Header를 문자열로 변환할 수 없습니다.");
             AppError::Unauthorized
         })?;
 
@@ -54,7 +47,6 @@ pub fn authenticate(
             );
             AppError::Unauthorized
         })?;
-
 
     // 3. JWT 검증
     let claims = jwt.verify_access_token(token)?;
@@ -85,11 +77,7 @@ where
     ) -> Result<Self, Self::Rejection> {
         // Middleware에서 이미 JWT 인증을 완료한 경우
         // request.extensions() 전역 보관함에 저장된 AuthenticatedUser를 꺼내서 사용
-        if let Some(user) = parts
-            .extensions
-            .get::<AuthenticatedUser>()
-            .cloned()
-        {
+        if let Some(user) = parts.extensions.get::<AuthenticatedUser>().cloned() {
             return Ok(user);
         }
 
@@ -97,10 +85,7 @@ where
         let account_service = Arc::<AccountService>::from_ref(state);
 
         // 공통 인증 함수 사용
-        authenticate(
-            parts.headers.get(AUTHORIZATION),
-            account_service.jwt(),
-        )
+        authenticate(parts.headers.get(AUTHORIZATION), account_service.jwt())
     }
 }
 
@@ -154,7 +139,9 @@ mod tests {
     #[test]
     fn valid_jwt_succeeds() {
         let jwt = test_jwt();
-        let token = jwt.create_access_token(7, vec![AccountRole::Customer]).unwrap();
+        let token = jwt
+            .create_access_token(7, vec![AccountRole::Customer])
+            .unwrap();
 
         // Authorization: Bearer 올바른 토큰값
         let header_value = format!("Bearer {token}");
@@ -169,7 +156,9 @@ mod tests {
     #[test]
     fn valid_jwt_with_employee_role_succeeds() {
         let jwt = test_jwt();
-        let token = jwt.create_access_token(100, vec![AccountRole::Employee]).unwrap();
+        let token = jwt
+            .create_access_token(100, vec![AccountRole::Employee])
+            .unwrap();
         let header_value = format!("Bearer {token}");
         let header = HeaderValue::from_str(&header_value).unwrap();
 
@@ -182,7 +171,9 @@ mod tests {
     #[test]
     fn valid_jwt_with_admin_role_succeeds() {
         let jwt = test_jwt();
-        let token = jwt.create_access_token(99, vec![AccountRole::Admin]).unwrap();
+        let token = jwt
+            .create_access_token(99, vec![AccountRole::Admin])
+            .unwrap();
         let header_value = format!("Bearer {token}");
         let header = HeaderValue::from_str(&header_value).unwrap();
 

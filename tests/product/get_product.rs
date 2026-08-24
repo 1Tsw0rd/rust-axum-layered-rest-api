@@ -9,7 +9,11 @@ use rust_axum_layered_rest_api::common::auth::role::AccountRole;
 #[tokio::test]
 async fn all_roles_with_read_permission_can_get_product() {
     // 시나리오 1: Admin, Employee, Customer 모두 상품 단건 조회가 가능하다.
-    for role in [AccountRole::Admin, AccountRole::Employee, AccountRole::Customer] {
+    for role in [
+        AccountRole::Admin,
+        AccountRole::Employee,
+        AccountRole::Customer,
+    ] {
         let (app, pool, _redis) = test_app().await;
         seed_test_products(&pool).await;
         let token = test_token(vec![role]);

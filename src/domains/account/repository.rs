@@ -1,16 +1,7 @@
-use sqlx::{
-    PgPool,
-    Postgres,
-    Transaction,
-};
+use sqlx::{PgPool, Postgres, Transaction};
 
-use crate::common::{
-    error::AppError,
-    auth::role::AccountRole
-};
-use crate::domains::account::{
-    entity::AccountEntity,
-};
+use crate::common::{auth::role::AccountRole, error::AppError};
+use crate::domains::account::entity::AccountEntity;
 
 // ===== 레포지토리 전용 입력 파라미터 구조체 =====
 #[derive(Debug)]
@@ -43,9 +34,7 @@ impl AccountRepository {
     }
 
     // DB 트랜잭션 시작 함수
-    pub async fn begin(
-        &self,
-    ) -> Result<Transaction<'_, Postgres>, AppError> {
+    pub async fn begin(&self) -> Result<Transaction<'_, Postgres>, AppError> {
         self.db_pool.begin().await.map_err(Into::into)
     }
 
@@ -91,12 +80,9 @@ impl AccountRepository {
         .fetch_one(&mut **tx) // &mut **tx: tx를 두 번 역참조하여 Transaction 내부의 PgConnection을 가변 참조로 전달
         .await
         .map_err(|e| match e {
-            sqlx::Error::Database(db_err)
-                if db_err.constraint() == Some("accounts_email_key") => {
-                    AppError::BadRequest(
-                        "이미 사용 중인 이메일입니다.".into(),
-                    )
-                }
+            sqlx::Error::Database(db_err) if db_err.constraint() == Some("accounts_email_key") => {
+                AppError::BadRequest("이미 사용 중인 이메일입니다.".into())
+            }
             _ => e.into(),
         })?;
         // db_err.code()       // PostgreSQL 오류 코드
@@ -105,7 +91,7 @@ impl AccountRepository {
         // db_err.column()     // 관련 컬럼
         // db_err.message()    // DB 오류 메시지
 
-         Ok(account_id)
+        Ok(account_id)
     }
 
     pub async fn assign_role(
@@ -133,10 +119,7 @@ impl AccountRepository {
         .await?;
 
         if result.rows_affected() == 0 {
-            tracing::error!(
-                "Role 연결 실패: 존재하지 않는 role={}",
-                role.as_str()
-            );
+            tracing::error!("Role 연결 실패: 존재하지 않는 role={}", role.as_str());
 
             return Err(AppError::Internal(
                 "계정 역할 처리 중 오류가 발생했습니다.".into(),
@@ -170,14 +153,9 @@ impl AccountRepository {
             .into_iter()
             .map(|name| {
                 AccountRole::try_from(name.as_str()).map_err(|_| {
-                    tracing::error!(
-                        "DB에 존재하지 않는 AccountRole 값: {}",
-                        name
-                    );
+                    tracing::error!("DB에 존재하지 않는 AccountRole 값: {}", name);
 
-                    AppError::Internal(
-                        "계정 역할 처리 중 오류가 발생했습니다.".into(),
-                    )
+                    AppError::Internal("계정 역할 처리 중 오류가 발생했습니다.".into())
                 })
             })
             .collect()

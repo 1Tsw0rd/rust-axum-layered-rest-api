@@ -1,4 +1,7 @@
-use axum::{body::Body, http::{Request, StatusCode}};
+use axum::{
+    body::Body,
+    http::{Request, StatusCode},
+};
 use tower::ServiceExt;
 
 use super::super::{login_account, register_account, response_json, test_app};
@@ -116,7 +119,10 @@ async fn refresh_rejects_unknown_refresh_token() {
         .unwrap();
 
     let response = app
-        .oneshot(refresh_request(&expired, "refresh_token=totally-unknown-value"))
+        .oneshot(refresh_request(
+            &expired,
+            "refresh_token=totally-unknown-value",
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
@@ -160,6 +166,10 @@ async fn refresh_rejects_malformed_authorization_header() {
             .body(Body::empty())
             .unwrap();
         let response = app.clone().oneshot(request).await.unwrap();
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED, "auth_value={auth_value:?}");
+        assert_eq!(
+            response.status(),
+            StatusCode::UNAUTHORIZED,
+            "auth_value={auth_value:?}"
+        );
     }
 }

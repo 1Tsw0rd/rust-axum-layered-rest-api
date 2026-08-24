@@ -1,7 +1,10 @@
 use axum::http::StatusCode;
 use tower::ServiceExt;
 
-use super::super::{authorized_json_request, authorized_request, response_json, seed_test_products, test_app, test_token};
+use super::super::{
+    authorized_json_request, authorized_request, response_json, seed_test_products, test_app,
+    test_token,
+};
 use rust_axum_layered_rest_api::common::auth::role::AccountRole;
 
 #[tokio::test]
@@ -18,7 +21,7 @@ async fn each_partial_update_shape_is_supported() {
         .oneshot(authorized_request("GET", "/products?page=1&size=4", &token))
         .await
         .unwrap();
-    
+
     assert_eq!(response.status(), StatusCode::OK);
 
     let list = response_json(response).await;
@@ -36,14 +39,23 @@ async fn each_partial_update_shape_is_supported() {
 
         let response = app
             .clone()
-            .oneshot(authorized_json_request("PATCH", &format!("/products/{id}"), &token, patch_body.clone()))
+            .oneshot(authorized_json_request(
+                "PATCH",
+                &format!("/products/{id}"),
+                &token,
+                patch_body.clone(),
+            ))
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::OK, "id={id}");
 
         let response = app
             .clone()
-            .oneshot(authorized_request("GET", &format!("/products/{id}"), &token))
+            .oneshot(authorized_request(
+                "GET",
+                &format!("/products/{id}"),
+                &token,
+            ))
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::OK);
@@ -51,7 +63,10 @@ async fn each_partial_update_shape_is_supported() {
 
         // 수정한 필드는 변경되었는지, 수정하지 않은 필드는 원래 값(before) 그대로인지 확인
         for field in ["name", "description", "price"] {
-            let expected = patch_body.get(field).cloned().unwrap_or(before[field].clone());
+            let expected = patch_body
+                .get(field)
+                .cloned()
+                .unwrap_or(before[field].clone());
             assert_eq!(after["data"][field], expected, "id={id} field={field}");
         }
     }
@@ -138,7 +153,10 @@ async fn customer_is_forbidden_and_missing_product_is_not_found() {
     let response = app
         .clone()
         .oneshot(authorized_json_request(
-            "PATCH", "/products/1", &customer, serde_json::json!({"name": "거부"}),
+            "PATCH",
+            "/products/1",
+            &customer,
+            serde_json::json!({"name": "거부"}),
         ))
         .await
         .unwrap();
@@ -147,7 +165,10 @@ async fn customer_is_forbidden_and_missing_product_is_not_found() {
     let admin = test_token(vec![AccountRole::Admin]);
     let response = app
         .oneshot(authorized_json_request(
-            "PATCH", "/products/9999", &admin, serde_json::json!({"name": "없음"}),
+            "PATCH",
+            "/products/9999",
+            &admin,
+            serde_json::json!({"name": "없음"}),
         ))
         .await
         .unwrap();
@@ -165,7 +186,10 @@ async fn invalid_path_is_rejected() {
     let response = app
         .clone()
         .oneshot(authorized_json_request(
-            "PATCH", "/products/abc", &token, serde_json::json!({"name": "수정"}),
+            "PATCH",
+            "/products/abc",
+            &token,
+            serde_json::json!({"name": "수정"}),
         ))
         .await
         .unwrap();
@@ -173,7 +197,10 @@ async fn invalid_path_is_rejected() {
 
     let response = app
         .oneshot(authorized_json_request(
-            "PATCH", "/products/0", &token, serde_json::json!({"name": "수정"}),
+            "PATCH",
+            "/products/0",
+            &token,
+            serde_json::json!({"name": "수정"}),
         ))
         .await
         .unwrap();

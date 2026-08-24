@@ -1,20 +1,16 @@
 pub mod controller;
 pub mod dto;
-pub mod service;
-pub mod repository;
 pub mod entity;
+pub mod repository;
+pub mod service;
 
 use axum::Router;
-use std::sync::Arc;
 use service::ProductService;
+use std::sync::Arc;
 
-use crate::state::AppState;
-use crate::common::auth::permission::{
-    Permission::Product,
-    ProductPermission::*,
-};
+use crate::common::auth::permission::{Permission::Product, ProductPermission::*};
 use crate::secured_route;
-
+use crate::state::AppState;
 
 // product 도메인 전용 라우터 생성기
 pub fn router(state: AppState) -> Router {
@@ -31,20 +27,20 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/",
             secured_route!(
-            state.jwt.clone();
-            get(controller::get_products) => Product(GetProducts),
-            post(controller::create_product) => Product(CreateProduct),
-        ),
+                state.jwt.clone();
+                get(controller::get_products) => Product(GetProducts),
+                post(controller::create_product) => Product(CreateProduct),
+            ),
         )
         .route(
             "/{id}",
             secured_route!(
-            state.jwt.clone();
-            get(controller::get_product) => Product(GetProduct),
-            put(controller::put_product) => Product(PutProduct),
-            patch(controller::patch_product) => Product(PatchProduct),
-            delete(controller::delete_product) => Product(DeleteProduct),
-        ),
+                state.jwt.clone();
+                get(controller::get_product) => Product(GetProduct),
+                put(controller::put_product) => Product(PutProduct),
+                patch(controller::patch_product) => Product(PatchProduct),
+                delete(controller::delete_product) => Product(DeleteProduct),
+            ),
         )
         .with_state(product_service)
 

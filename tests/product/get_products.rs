@@ -36,7 +36,9 @@ async fn success_with_keyword_and_second_page() {
     let token = test_token(vec![AccountRole::Customer]);
     let response = app
         .oneshot(authorized_request(
-            "GET", "/products?page=2&size=2&keyword=Keyboard", &token,
+            "GET",
+            "/products?page=2&size=2&keyword=Keyboard",
+            &token,
         ))
         .await
         .unwrap();
@@ -61,7 +63,11 @@ async fn validation_rejects_invalid_query_values() {
         let (app, _pool, _redis) = test_app().await;
         let token = test_token(vec![AccountRole::Customer]);
         let response = app
-            .oneshot(authorized_request("GET", &format!("/products?{query}"), &token))
+            .oneshot(authorized_request(
+                "GET",
+                &format!("/products?{query}"),
+                &token,
+            ))
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
@@ -76,7 +82,11 @@ async fn malformed_query_returns_bad_request() {
     let (app, _pool, _redis) = test_app().await;
     let token = test_token(vec![AccountRole::Customer]);
     let response = app
-        .oneshot(authorized_request("GET", "/products?page=abc&size=2", &token))
+        .oneshot(authorized_request(
+            "GET",
+            "/products?page=abc&size=2",
+            &token,
+        ))
         .await
         .unwrap();
 
@@ -96,7 +106,11 @@ async fn authentication_and_permission_are_enforced() {
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
-    for role in [AccountRole::Admin, AccountRole::Employee, AccountRole::Customer] {
+    for role in [
+        AccountRole::Admin,
+        AccountRole::Employee,
+        AccountRole::Customer,
+    ] {
         let (app, _pool, _redis) = test_app().await;
         let token = test_token(vec![role]);
         let response = app
@@ -114,7 +128,11 @@ async fn empty_search_result_returns_empty_list() {
     seed_test_products(&pool).await;
     let token = test_token(vec![AccountRole::Customer]);
     let response = app
-        .oneshot(authorized_request("GET", "/products?page=1&size=10&keyword=NotExistXYZ", &token))
+        .oneshot(authorized_request(
+            "GET",
+            "/products?page=1&size=10&keyword=NotExistXYZ",
+            &token,
+        ))
         .await
         .unwrap();
 

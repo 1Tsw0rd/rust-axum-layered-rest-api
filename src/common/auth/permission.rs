@@ -17,7 +17,6 @@ impl Permission {
 pub enum AccountPermission {
     // CreateAccount, 회원가입은 권한이 없어도 접근 가능한 api
     GetMe,
-
 }
 
 impl AccountPermission {

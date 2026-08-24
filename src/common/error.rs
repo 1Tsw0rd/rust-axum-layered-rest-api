@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 
 use crate::common::response::{ApiResponse, ErrorBody};
@@ -44,23 +44,11 @@ impl AppError {
 
     fn client_message(&self) -> String {
         match self {
-            Self::Validation(msg)
-            | Self::BadRequest(msg)
-            | Self::NotFound(msg) => msg.clone(),
-
-            Self::Unauthorized => {
-                "인증이 필요합니다.".into()
-            }
-
+            Self::Validation(msg) | Self::BadRequest(msg) | Self::NotFound(msg) => msg.clone(),
+            Self::Unauthorized => "인증이 필요합니다.".into(),
             Self::InvalidCredentials => "이메일 또는 비밀번호가 올바르지 않습니다.".into(),
-
-            Self::Forbidden => {
-               "접근 권한이 없습니다.".into()
-            }
-
-            Self::Internal(_) => {
-                "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.".into()
-            }
+            Self::Forbidden => "접근 권한이 없습니다.".into(),
+            Self::Internal(_) => "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.".into(),
         }
     }
 }
@@ -104,12 +92,8 @@ impl IntoResponse for AppError {
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
         match err {
-            sqlx::Error::RowNotFound => {
-                AppError::NotFound("대상을 찾을 수 없습니다.".into())
-            }
-            _ => {
-                AppError::Internal(err.to_string())
-            }
+            sqlx::Error::RowNotFound => AppError::NotFound("대상을 찾을 수 없습니다.".into()),
+            _ => AppError::Internal(err.to_string()),
         }
     }
 }

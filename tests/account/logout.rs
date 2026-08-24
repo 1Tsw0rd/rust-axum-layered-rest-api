@@ -1,4 +1,7 @@
-use axum::{body::Body, http::{Request, StatusCode}};
+use axum::{
+    body::Body,
+    http::{Request, StatusCode},
+};
 use tower::ServiceExt;
 
 use super::super::{login_account, register_account, response_json, test_app};
@@ -6,9 +9,7 @@ use super::super::{login_account, register_account, response_json, test_app};
 // Access Token(Authorization Header)과 Refresh Token(Cookie)을 선택적으로 포함하는 로그아웃 요청 생성
 // 각각 None이면 해당 헤더를 생략함 (Access Token / Refresh Cookie 누락 케이스 테스트에 사용)
 fn logout_request(token: Option<&str>, cookie: Option<&str>) -> Request<Body> {
-    let mut builder = Request::builder()
-        .method("POST")
-        .uri("/accounts/logout");
+    let mut builder = Request::builder().method("POST").uri("/accounts/logout");
     if let Some(token) = token {
         builder = builder.header("authorization", format!("Bearer {token}"));
     }
@@ -80,7 +81,10 @@ async fn logout_requires_access_token_and_refresh_cookie() {
 
     // 잘못된 Access Token
     let response = app
-        .oneshot(logout_request(Some("old.invalid.token"), Some("refresh_token=old")))
+        .oneshot(logout_request(
+            Some("old.invalid.token"),
+            Some("refresh_token=old"),
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);

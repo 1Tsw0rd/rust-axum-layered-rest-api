@@ -1,7 +1,4 @@
-use axum::{
-    http::StatusCode,
-    Json,
-};
+use axum::{Json, http::StatusCode};
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -44,7 +41,7 @@ pub struct ApiResponse<T: Serialize> {
 // ApiResponse::<()>::success(StatusCode::OK) 처럼 <()>가 항상 붙어 보기에 좋지 않음
 // 그래서 data가 없는 성공 응답 전용 impl을 따로 만들어서 Controller에서 호출할 때
 // ApiResponse::success(StatusCode::OK) 처럼 <()>가 생략되도록 함
-impl ApiResponse<()> { 
+impl ApiResponse<()> {
     // 성공 - data 없이 단순 성공 응답하고, StatusCode를 커스터마이징할 수 있음
     pub fn success(status: StatusCode) -> (StatusCode, Json<Self>) {
         (
@@ -77,7 +74,14 @@ impl<T: Serialize> ApiResponse<T> {
 
     // 성공 - 목록 data + 페이징 정보를 포함한 meta 필드 응답
     // 응답할 때 page, size 제거해도 되지만 그냥 포함하는 걸로 함
-    pub fn success_with_list(status: StatusCode, data: T, page: i64, size: i64, count: usize, total: i64,) -> (StatusCode, Json<Self>) {
+    pub fn success_with_list(
+        status: StatusCode,
+        data: T,
+        page: i64,
+        size: i64,
+        count: usize,
+        total: i64,
+    ) -> (StatusCode, Json<Self>) {
         let total_pages = if total == 0 {
             0
         } else {
@@ -90,7 +94,13 @@ impl<T: Serialize> ApiResponse<T> {
                 success: true,
                 status: status.as_u16(),
                 data: Some(data),
-                meta: Some(Meta { count, total, page, size, total_pages }),
+                meta: Some(Meta {
+                    count,
+                    total,
+                    page,
+                    size,
+                    total_pages,
+                }),
                 error: None,
             }),
         )

@@ -1,6 +1,6 @@
 use axum::{
-    extract::{FromRequest, FromRequestParts, Json, Path, Query, Request},
     extract::rejection::{JsonRejection, PathRejection, QueryRejection},
+    extract::{FromRequest, FromRequestParts, Json, Path, Query, Request},
     http::request::Parts,
 };
 use serde::de::DeserializeOwned;
@@ -38,13 +38,13 @@ use crate::common::error::AppError;
 // FromRequestParts: Client Request의 'Body를 제외한 모든 정보' 추출 (URL 경로, 쿼리 스트링, Header 등)
 // FromRequest     : Client Request의 'Body(본문) 데이터' 추출 (JSON, Form 등)
 
-
 /// ---------------------------
 /// Json
 /// ---------------------------
 pub struct ValidatedJson<T>(pub T);
 
-impl<S, T> FromRequest<S> for ValidatedJson<T> // ValidationJson<T>에 FromRequest<S> 능력 부여하는데
+impl<S, T> FromRequest<S> for ValidatedJson<T>
+// ValidationJson<T>에 FromRequest<S> 능력 부여하는데
 where
     S: Send + Sync, // S(서버 상태)는 멀티스레드 환경에서 "안전하게 전달(Send) 및 공유(Sync)" 가능해야 함
     T: DeserializeOwned + Validate, // T(데이터 타입)는 "JSON 역직렬화(패싱)"가 가능하고 "유효성 검증(Validate)" 규칙이 있어야 함
@@ -59,7 +59,8 @@ where
             .map_err(map_json_error)?;
 
         // 파싱된 데이터(DTO)의 유효성 검증 규칙을 실행 (실패 시 우리가 만든 Validation 에러로 변환)
-        value.validate()
+        value
+            .validate()
             .map_err(|e| AppError::Validation(e.to_string()))?;
 
         // 추출과 검증을 모두 통과하면 최종적으로 ValidatedJson을 리턴
@@ -69,7 +70,7 @@ where
 // =========================================================================
 // 💡 [익스트랙터(Extractor) 단계별 실제 데이터 변환 과정 예시 메모]
 // =========================================================================
-// 
+//
 // 0. 실습용 데이터 세팅 (DTO)
 // pub struct CreateUser {
 //     #[validate(length(min = 2, message = "이름은 최소 2글자 이상이어야 합니다."))]
@@ -93,11 +94,11 @@ where
 // -------------------------------------------------------------------------
 // 3. [2단계] let Json(value) = ... 실행 직후 (구조 분해 할당)
 // -------------------------------------------------------------------------
-// 오른쪽 결과인 Json(CreateUser { ... }) 데이터에서 
+// 오른쪽 결과인 Json(CreateUser { ... }) 데이터에서
 // 안의 진짜 데이터 구조체(CreateUser {...})만 'value'라는 순수한 변수에 대입
-// CreateUser { 
-//     name: "Tom".to_string(), 
-//     email: "tom@test.com".to_string() 
+// CreateUser {
+//     name: "Tom".to_string(),
+//     email: "tom@test.com".to_string()
 // }
 //
 // -------------------------------------------------------------------------
@@ -105,7 +106,7 @@ where
 // -------------------------------------------------------------------------
 // 변수 value에 접근해서 DTO 위에 적어두었던 검증 규칙을 실행
 // * 성공 케이스: "Tom"은 2글자 이상이므로 Ok(())가 반환되어 통과
-// * 실패 케이스: 만약 name: "T"로 보내면 map_err이 발동되어 
+// * 실패 케이스: 만약 name: "T"로 보내면 map_err이 발동되어
 //   AppError::Validation("이름은 최소 2글자 이상이어야 합니다.")를 리턴하고 바로 튕겨 나감
 //
 // -------------------------------------------------------------------------
@@ -136,7 +137,8 @@ where
             .await
             .map_err(map_path_error)?;
 
-        value.validate()
+        value
+            .validate()
             .map_err(|e| AppError::Validation(e.to_string()))?;
 
         Ok(ValidatedPath(value))
@@ -160,16 +162,17 @@ where
             .await
             .map_err(map_query_error)?;
 
-        value.validate()
+        value
+            .validate()
             .map_err(|e| AppError::Validation(e.to_string()))?;
 
         Ok(ValidatedQuery(value))
     }
 }
 
-/// ---------------------------
-/// Error Mapper
-/// ---------------------------
+// ---------------------------
+// Error Mapper
+// ---------------------------
 
 fn map_json_error(_: JsonRejection) -> AppError {
     AppError::BadRequest("요청 본문이 올바르지 않습니다.".into())

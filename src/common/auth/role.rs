@@ -1,13 +1,14 @@
-use serde::{Deserialize, Serialize};
 use crate::common::error::AppError;
+use serde::{Deserialize, Serialize};
 
+#[rustfmt::skip] // 아래 항목별 설명 주석을 직접 정렬해둔 형태라 cargo fmt가 재배치하지 않도록 고정
 #[derive(
-    Debug, // {:?} 매크로로 구조체 내부 값 터미널 로그에 출력하기 위함
+    Debug,       // {:?} 매크로로 구조체 내부 값 터미널 로그에 출력하기 위함
     Clone, Copy, // 소유권 이동 없이 값 복사만으로 함수 인자 가볍게 전달
-    PartialEq, // ==, != 연산자를 사용한 값 비교 능력 부여
-    Eq, // HashMap 키나 엄격한 패턴 매칭 검증을 위해 반사성 보장
-    Serialize, // Rust Enum 객체를 외부에 전송 가능한 Json 문자열로 변환
-    Deserialize // 들어온 Json 텍스트를 Rust의 Enum으로 파싱
+    PartialEq,   // ==, != 연산자를 사용한 값 비교 능력 부여
+    Eq,          // HashMap 키나 엄격한 패턴 매칭 검증을 위해 반사성 보장
+    Serialize,   // Rust Enum 객체를 외부에 전송 가능한 Json 문자열로 변환
+    Deserialize  // 들어온 Json 텍스트를 Rust의 Enum으로 파싱
 )]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 // Serialize / Deserialize 시 enum variant를
@@ -72,10 +73,7 @@ mod tests {
     // 시나리오 2: 소문자 및 대소문자가 혼합된 문자열이 올바른 AccountRole Enum으로 정상 변환되는지 검증
     #[test]
     fn string_to_role() {
-        assert_eq!(
-            AccountRole::try_from("admin").unwrap(),
-            AccountRole::Admin
-        );
+        assert_eq!(AccountRole::try_from("admin").unwrap(), AccountRole::Admin);
 
         assert_eq!(
             AccountRole::try_from("CUSTOMER").unwrap(),

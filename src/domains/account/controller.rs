@@ -1,39 +1,23 @@
-use std::sync::Arc;
-use axum::{
-    extract::State, http::{
-        HeaderMap, StatusCode, header::AUTHORIZATION,
-    }, response::IntoResponse,
-};
-use axum_extra::extract::cookie::{
-    Cookie,
-    CookieJar,
-    SameSite,
-};
 use crate::common::{
-    auth::extractor::AuthenticatedUser,
-    error::AppError,
-    extractors::ValidatedJson,
+    auth::extractor::AuthenticatedUser, error::AppError, extractors::ValidatedJson,
     response::ApiResponse,
 };
 use crate::domains::account::{
-    dto::{
-        CreateAccountDto,
-        LoginAccountDto,
-        TokenResponseDto,
-    },
-    service::{
-        AccountService,
-        TokenResult,
-    }
+    dto::{CreateAccountDto, LoginAccountDto, TokenResponseDto},
+    service::{AccountService, TokenResult},
 };
+use axum::{
+    extract::State,
+    http::{HeaderMap, StatusCode, header::AUTHORIZATION},
+    response::IntoResponse,
+};
+use axum_extra::extract::cookie::{Cookie, CookieJar, SameSite};
+use std::sync::Arc;
 
 // access token은 response body
 // refresh token은 cookie에 담아 응답
 fn token_response(jar: CookieJar, result: TokenResult) -> impl IntoResponse {
-    let refresh_cookie = Cookie::build((
-        "refresh_token",
-        result.refresh_token,
-    ))
+    let refresh_cookie = Cookie::build(("refresh_token", result.refresh_token))
         .path("/accounts") // accounts 및 하위 경로에서 Refresh Cookie 전송
         .http_only(true) // JavaScript에서 Cookie 접근 불가
         .secure(true) // HTTPS에서만 Cookie 전송. Nginx 등 앞단 프록시가 TLS를 종단(termination)하는 구조를 전제로 함
@@ -48,13 +32,9 @@ fn token_response(jar: CookieJar, result: TokenResult) -> impl IntoResponse {
 
     (
         jar,
-        ApiResponse::success_with_data(
-            StatusCode::OK,
-            response_body,
-        ),
+        ApiResponse::success_with_data(StatusCode::OK, response_body),
     )
 }
-
 
 // POST: 계정 생성
 #[axum::debug_handler]
@@ -90,14 +70,9 @@ pub async fn get_me(
 ) -> Result<impl IntoResponse, AppError> {
     // AuthenticatedUser Extractor가 Authorization 헤더의 JWT를 먼저 검증 수행
     // 검증이 성공하면 JWT의 sub(account_id)를 사용할 수 있음
-    let account = account_service
-        .get_me(account_id)
-        .await?;
+    let account = account_service.get_me(account_id).await?;
 
-    Ok(ApiResponse::success_with_data(
-        StatusCode::OK,
-        account,
-    ))
+    Ok(ApiResponse::success_with_data(StatusCode::OK, account))
 }
 
 // POST: Access Token 재발급
@@ -110,16 +85,12 @@ pub async fn refresh(
     let access_token = headers
         .get(AUTHORIZATION) // Authorization Header 조회
         .ok_or_else(|| {
-            tracing::warn!(
-                "Refresh 실패: Authorization Header가 없습니다."
-            );
+            tracing::warn!("Refresh 실패: Authorization Header가 없습니다.");
             AppError::Unauthorized
         })?
-        .to_str()  // HeaderValue를 문자열로 변환
+        .to_str() // HeaderValue를 문자열로 변환
         .map_err(|_| {
-            tracing::warn!(
-                "Refresh 실패: Authorization Header를 문자열로 변환할 수 없습니다."
-            );
+            tracing::warn!("Refresh 실패: Authorization Header를 문자열로 변환할 수 없습니다.");
             AppError::Unauthorized
         })?
         .strip_prefix("Bearer ") // "Bearer " 제거
@@ -154,10 +125,7 @@ pub async fn logout(
     let refresh_token = jar
         .get("refresh_token") // refresh_token Cookie 조회
         .ok_or_else(|| {
-            tracing::warn!(
-                account_id,
-                "Logout 실패: refresh_token Cookie가 없습니다."
-            );
+            tracing::warn!(account_id, "Logout 실패: refresh_token Cookie가 없습니다.");
 
             AppError::Unauthorized
         })?
@@ -175,8 +143,5 @@ pub async fn logout(
 
     let jar = jar.remove(remove_cookie);
 
-    Ok((
-        jar,
-        ApiResponse::success(StatusCode::OK),
-    ))
+    Ok((jar, ApiResponse::success(StatusCode::OK)))
 }
