@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 use crate::common::error::AppError;
 use crate::domains::product::dto::{CreateProductDto, ReplaceProductDto, UpdateProductDto, ProductListQuery, ProductResponseDto};
-use crate::domains::product::repository::{ProductRepository, CreateProductParams, ReplaceProductParams, UpdateProductParams};
+use crate::domains::product::repository::{ProductRepository, CreateProductParams, UpdateProductParams};
 use crate::common::dto::PaginatedResponseDto;
 
 // repository 주입

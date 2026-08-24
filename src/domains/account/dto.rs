@@ -40,7 +40,7 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
 fn validate_name(name: &str) -> Result<(), ValidationError> {
     let len = name.trim().chars().count();
 
-    if len < 1 || len > 50 {
+    if !(1..=50).contains(&len) {
         return Err(ValidationError::new("name_length"));
     }
 

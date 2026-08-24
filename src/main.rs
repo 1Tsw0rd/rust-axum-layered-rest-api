@@ -1,6 +1,7 @@
-mod domains;
-mod common;
-mod state;
+// common, domains, state는 lib.rs에서 이미 컴파일되므로
+// main.rs에서 다시 mod로 선언하지 않고 lib 크레이트에서 그대로 가져다 사용함
+// tests/에서도 lib 크레이트를 사용하므로 lib.rs는 필요함
+use rust_axum_layered_rest_api::{common, domains, state};
 
 use axum::Router;
 use tower_http::trace::TraceLayer;
@@ -8,9 +9,9 @@ use common::fallback::not_found;
 use common::middleware::request_id_middleware;
 
 use sqlx::postgres::PgPoolOptions;
-use crate::common::auth::jwt::JwtConfig;
-use crate::common::redis::RedisClient;
-use crate::state::AppState;
+use common::auth::jwt::JwtConfig;
+use common::redis::RedisClient;
+use state::AppState;
 
 const RUST_LOG_DEFAULT: &str = "my_app=debug,tower_http=debug,sqlx=warn";
 

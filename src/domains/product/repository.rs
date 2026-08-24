@@ -409,10 +409,6 @@ impl ProductRepository {
             has_set = true
         }
 
-        // separated가 builder를 가변 참조로 빌리고 있으므로,
-        // drop하여 borrow를 종료한 뒤 다음 로직에서 builder를 이어서 재사용 할 수 있게 함
-        drop(separated);
-
         // 서비스에서 검사하고 있긴 하지만, 방어코드로 남김
         if !has_set {
             return Err(AppError::BadRequest(

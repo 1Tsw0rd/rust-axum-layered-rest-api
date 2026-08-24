@@ -38,7 +38,7 @@ use crate::domains::product::entity::ProductEntity;
 fn validate_name(name: &str) -> Result<(), ValidationError> {
     let len = name.trim().chars().count();
 
-    if len < 1 || len > 100 {
+    if !(1..=100).contains(&len) {
         return Err(ValidationError::new("name_length"));
     }
 

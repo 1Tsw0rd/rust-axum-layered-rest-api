@@ -128,9 +128,11 @@ impl JwtConfig {
     // Access Token 검증
     fn decode_access_token(&self, token: &str, validate_exp: bool) -> Result<Claims, AppError> {
         // 1. exp 검증 설정
-        let mut validation = Validation::default();
-        validation.validate_exp = validate_exp;
-        
+        let validation = Validation {
+            validate_exp,
+            ..Default::default()
+        };
+
         // 2. 토큰 + DecodingKey로 서명 및 Claims 검증: 성공 시 Claims 반환 / 실패 시 401
         decode::<Claims>(
             token,

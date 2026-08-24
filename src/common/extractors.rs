@@ -167,9 +167,9 @@ where
     }
 }
 
-/// ---------------------------
-/// Error Mapper
-/// ---------------------------
+// ---------------------------
+// Error Mapper
+// ---------------------------
 
 fn map_json_error(_: JsonRejection) -> AppError {
     AppError::BadRequest("요청 본문이 올바르지 않습니다.".into())

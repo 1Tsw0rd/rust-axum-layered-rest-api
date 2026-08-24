@@ -66,9 +66,34 @@ impl RedisClient {
         Ok(())
     }
 
+    // Key에 저장된 값을 조회
+    // redis-cli GET key
+    pub async fn get(
+        &self,
+        key: &str,
+    ) -> Result<Option<String>, AppError> {
+        let mut connection = self.connection.clone();
+
+        // Some(value)는 key 존재, None는 Key 없음 또는 TTL 만료
+        // key가 있다면 value를 반환
+        redis::cmd("GET")
+            .arg(key)
+            .query_async(&mut connection)
+            .await
+            .map_err(|err| {
+                AppError::Internal(format!(
+                    "Redis 데이터 조회에 실패했습니다: {}",
+                    err
+                ))
+            })
+    }
+
     // Key-Value 데이터를 저장하고 TTL을 초 단위로 설정
     // redis-cli SET key value EX ttl
     // EX는 만료시간을 초 단위로 설정
+    // 현재는 저장 로직이 모두 atomic_pipeline(MULTI/EXEC)으로 처리되어 실사용처는 없지만,
+    // pipeline이 필요 없는 단건 SET이 필요해질 상황(예: 캐시 워밍업, 단발성 값 저장)을 위해 남겨둠
+    #[allow(dead_code)]
     pub async fn set(
         &self,
         key: &str,
@@ -94,30 +119,11 @@ impl RedisClient {
         Ok(())
     }
 
-    // Key에 저장된 값을 조회
-    // redis-cli GET key
-    pub async fn get(
-        &self,
-        key: &str,
-    ) -> Result<Option<String>, AppError> {
-        let mut connection = self.connection.clone();
-
-        // Some(value)는 key 존재, None는 Key 없음 또는 TTL 만료
-        // key가 있다면 value를 반환
-        redis::cmd("GET")
-            .arg(key)
-            .query_async(&mut connection)
-            .await
-            .map_err(|err| {
-                AppError::Internal(format!(
-                    "Redis 데이터 조회에 실패했습니다: {}",
-                    err
-                ))
-            })
-    }
-
     // Key에 저장된 데이터를 삭제
     // redis-cli DEL key
+    // 현재는 삭제 로직이 모두 atomic_pipeline(MULTI/EXEC)으로 처리되어 실사용처는 없지만,
+    // pipeline이 필요 없는 단건 DEL이 필요해질 상황을 위해 남겨둠
+    #[allow(dead_code)]
     pub async fn delete(
         &self,
         key: &str,
