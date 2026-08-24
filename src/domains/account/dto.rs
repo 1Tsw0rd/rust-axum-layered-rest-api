@@ -18,15 +18,10 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
     // 따라서 일반 기호뿐 아니라 한글·이모지 같은 Unicode 문자도 이 조건을 충족할 수 있음
     let has_special = password.chars().any(|c| !c.is_ascii_alphanumeric());
 
-    let combination_count = [
-        has_uppercase,
-        has_lowercase,
-        has_digit,
-        has_special
-    ]
-    .into_iter()
-    .filter(|&value| value)
-    .count();
+    let combination_count = [has_uppercase, has_lowercase, has_digit, has_special]
+        .into_iter()
+        .filter(|&value| value)
+        .count();
 
     if combination_count < 3 {
         return Err(ValidationError::new("password_combination"));
@@ -49,8 +44,7 @@ fn validate_name(name: &str) -> Result<(), ValidationError> {
 
 // admin은 request로 생성하지 못하도록 함
 fn validate_role(role: &str) -> Result<(), ValidationError> {
-    let role = AccountRole::try_from(role)
-        .map_err(|_| ValidationError::new("invalid_role"))?;
+    let role = AccountRole::try_from(role).map_err(|_| ValidationError::new("invalid_role"))?;
 
     if role == AccountRole::Admin {
         tracing::warn!("회원가입에서는 Admin을 허용하지 않음");
@@ -65,12 +59,14 @@ pub struct CreateAccountDto {
     #[validate(email(message = "올바른 이메일 형식이어야 합니다."))]
     pub email: String,
 
+    #[rustfmt::skip]
     #[validate(
         length(min = 8,max = 100, message = "비밀번호는 8자 이상, 100자 이하여야 합니다."),
         custom(function = "validate_password", message = "비밀번호는 공백 없이 영문 대문자, 영문 소문자, 숫자, 특수문자 중 3가지 이상을 포함해야 합니다.")
     )]
     pub password: String,
 
+    #[rustfmt::skip]
     #[validate(custom(function = "validate_name", message = "이름은 1자 이상, 50자 이하여야 합니다."))]
     pub name: String,
 
@@ -166,12 +162,12 @@ mod tests {
     // 시나리오 4: 2가지 조합만 포함하면 실패
     #[test]
     fn password_with_2_combinations_fails() {
-        assert!(validate_password("abcdefg1").is_err());   // 소문자 + 숫자
-        assert!(validate_password("ABCDEFG1").is_err());   // 대문자 + 숫자
-        assert!(validate_password("ABCDefgh").is_err());   // 대문자 + 소문자
-        assert!(validate_password("abcdefg!").is_err());   // 소문자 + 특수문자
-        assert!(validate_password("ABCDEFG!").is_err());   // 대문자 + 특수문자
-        assert!(validate_password("1234567!").is_err());   // 숫자 + 특수문자
+        assert!(validate_password("abcdefg1").is_err()); // 소문자 + 숫자
+        assert!(validate_password("ABCDEFG1").is_err()); // 대문자 + 숫자
+        assert!(validate_password("ABCDefgh").is_err()); // 대문자 + 소문자
+        assert!(validate_password("abcdefg!").is_err()); // 소문자 + 특수문자
+        assert!(validate_password("ABCDEFG!").is_err()); // 대문자 + 특수문자
+        assert!(validate_password("1234567!").is_err()); // 숫자 + 특수문자
     }
 
     // 시나리오 5: 공백이 포함되면 실패해야 함
@@ -220,7 +216,7 @@ mod tests {
         assert!(dto.validate().is_err());
     }
 
-   // 시나리오 9: 비밀번호가 8자 미만이면 조합을 충족해도 DTO 전체 검증이 실패해야 함
+    // 시나리오 9: 비밀번호가 8자 미만이면 조합을 충족해도 DTO 전체 검증이 실패해야 함
     #[test]
     fn create_account_dto_password_too_short() {
         let dto = CreateAccountDto {

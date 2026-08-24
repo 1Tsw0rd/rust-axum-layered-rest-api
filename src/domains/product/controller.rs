@@ -1,16 +1,12 @@
-use std::sync::Arc;
-use axum::{extract::State, response::IntoResponse, http::StatusCode};
+use crate::common::error::AppError;
+use crate::common::extractors::{ValidatedJson, ValidatedPath, ValidatedQuery};
+use crate::common::response::ApiResponse;
 use crate::domains::product::{
-    dto::{ProductPathId, CreateProductDto, ReplaceProductDto, UpdateProductDto, ProductListQuery},
+    dto::{CreateProductDto, ProductListQuery, ProductPathId, ReplaceProductDto, UpdateProductDto},
     service::ProductService,
 };
-use crate::common::response::ApiResponse;
-use crate::common::error::AppError;
-use crate::common::extractors::{
-    ValidatedJson,
-    ValidatedPath,
-    ValidatedQuery,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse};
+use std::sync::Arc;
 
 // State(product_service): Spring의 @Autowired나 NestJS 생성자 주입과 같은 의존성 주입(DI) 장치
 // State<Arc<ProductService>>: State가 보관 중인 Arc<ProductService>를 패턴 매칭으로 꺼내 product_service 변수에 바인딩하는 문법
@@ -36,9 +32,9 @@ pub async fn get_products(
     Ok(ApiResponse::success_with_list(
         StatusCode::OK,
         result.data,
-        query.page, // page
-        query.size, // size
-        result.count,   // count
+        query.page,   // page
+        query.size,   // size
+        result.count, // count
         result.total, // total
     ))
 }
@@ -48,7 +44,7 @@ pub async fn get_products(
 pub async fn create_product(
     State(product_service): State<Arc<ProductService>>,
     ValidatedJson(payload): ValidatedJson<CreateProductDto>,
-) -> Result<impl IntoResponse, AppError> { 
+) -> Result<impl IntoResponse, AppError> {
     product_service.create_product(&payload).await?;
     Ok(ApiResponse::success(StatusCode::CREATED))
 }
@@ -71,7 +67,9 @@ pub async fn patch_product(
     ValidatedPath(params): ValidatedPath<ProductPathId>,
     ValidatedJson(payload): ValidatedJson<UpdateProductDto>,
 ) -> Result<impl IntoResponse, AppError> {
-    product_service.update_product_fields(params.id, &payload).await?;
+    product_service
+        .update_product_fields(params.id, &payload)
+        .await?;
     Ok(ApiResponse::success(StatusCode::OK))
 }
 

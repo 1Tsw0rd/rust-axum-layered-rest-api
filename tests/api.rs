@@ -1,12 +1,15 @@
-use axum::{body::Body, http::{Request, Response}, Router};
+use axum::{
+    Router,
+    body::Body,
+    http::{Request, Response},
+};
 use http_body_util::BodyExt;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{PgPool, postgres::PgPoolOptions};
 use tower::ServiceExt;
 
 // 외부 통합 테스트 파일이므로 crate:: 대신 내 프로젝트 패키지 이름으로 시작
 use rust_axum_layered_rest_api::domains::{
-    account::router as account_router,
-    product::router as product_router,
+    account::router as account_router, product::router as product_router,
 };
 
 use rust_axum_layered_rest_api::common::auth::jwt::JwtConfig;
@@ -15,8 +18,8 @@ use rust_axum_layered_rest_api::common::fallback::not_found;
 use rust_axum_layered_rest_api::common::redis::RedisClient;
 use rust_axum_layered_rest_api::state::AppState;
 
-pub mod product;
 pub mod account;
+pub mod product;
 
 async fn cleanup_test_db(pool: &PgPool) {
     sqlx::query!(
@@ -25,9 +28,9 @@ async fn cleanup_test_db(pool: &PgPool) {
         RESTART IDENTITY CASCADE
         "#
     )
-        .execute(pool)
-        .await
-        .expect("테스트 DB 초기화 실패");
+    .execute(pool)
+    .await
+    .expect("테스트 DB 초기화 실패");
 }
 
 async fn cleanup_test_redis(redis: &RedisClient) {
@@ -45,8 +48,7 @@ pub async fn test_app() -> (Router, PgPool, RedisClient) {
     dotenvy::from_filename(".env.test").ok();
 
     // PostgreSQL 연결 설정
-    let test_db_url = std::env::var("TEST_DATABASE_URL")
-        .expect("TEST_DATABASE_URL 추출 실패");
+    let test_db_url = std::env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL 추출 실패");
 
     let test_db_pool = PgPoolOptions::new()
         .max_connections(1)
@@ -58,39 +60,31 @@ pub async fn test_app() -> (Router, PgPool, RedisClient) {
     cleanup_test_db(&test_db_pool).await;
 
     // Redis / Dragonfly 설정
-    let cache_backend = std::env::var("CACHE_BACKEND")
-        .expect("CACHE_BACKEND 환경변수 추출 실패");
+    let cache_backend = std::env::var("CACHE_BACKEND").expect("CACHE_BACKEND 환경변수 추출 실패");
 
     let redis_url = match cache_backend.as_str() {
         "redis" => {
-            let host = std::env::var("REDIS_HOST")
-                .expect("REDIS_HOST 환경변수 추출 실패");
-            let port = std::env::var("REDIS_PORT")
-                .expect("REDIS_PORT 환경변수 추출 실패");
-            let password = std::env::var("REDIS_PASSWORD")
-                .expect("REDIS_PASSWORD 환경변수 추출 실패");
-            let db = std::env::var("REDIS_DB")
-                .unwrap_or_else(|_| "0".to_string());
+            let host = std::env::var("REDIS_HOST").expect("REDIS_HOST 환경변수 추출 실패");
+            let port = std::env::var("REDIS_PORT").expect("REDIS_PORT 환경변수 추출 실패");
+            let password =
+                std::env::var("REDIS_PASSWORD").expect("REDIS_PASSWORD 환경변수 추출 실패");
+            let db = std::env::var("REDIS_DB").unwrap_or_else(|_| "0".to_string());
 
             format!("redis://:{}@{}:{}/{}", password, host, port, db)
         }
         "dragonfly" => {
-            let host = std::env::var("DRAGONFLY_HOST")
-                .expect("DRAGONFLY_HOST 환경변수 추출 실패");
-            let port = std::env::var("DRAGONFLY_PORT")
-                .expect("DRAGONFLY_PORT 환경변수 추출 실패");
-            let password = std::env::var("DRAGONFLY_PASSWORD")
-                .expect("DRAGONFLY_PASSWORD 환경변수 추출 실패");
-            let db = std::env::var("DRAGONFLY_DB")
-                .unwrap_or_else(|_| "0".to_string());
+            let host = std::env::var("DRAGONFLY_HOST").expect("DRAGONFLY_HOST 환경변수 추출 실패");
+            let port = std::env::var("DRAGONFLY_PORT").expect("DRAGONFLY_PORT 환경변수 추출 실패");
+            let password =
+                std::env::var("DRAGONFLY_PASSWORD").expect("DRAGONFLY_PASSWORD 환경변수 추출 실패");
+            let db = std::env::var("DRAGONFLY_DB").unwrap_or_else(|_| "0".to_string());
 
             format!("redis://:{}@{}:{}/{}", password, host, port, db)
         }
         _ => panic!("지원하지 않는 CACHE_BACKEND입니다: {}", cache_backend),
     };
 
-    let redis = redis::Client::open(redis_url)
-        .expect("테스트 Redis Client 초기화 실패");
+    let redis = redis::Client::open(redis_url).expect("테스트 Redis Client 초기화 실패");
 
     let redis_client = RedisClient::new(redis)
         .await
@@ -163,11 +157,7 @@ pub fn empty_request(method: &str, uri: &str) -> Request<Body> {
         .expect("테스트 요청 생성 실패")
 }
 
-pub fn authorized_request(
-    method: &str,
-    uri: &str,
-    token: &str,
-) -> Request<Body> {
+pub fn authorized_request(method: &str, uri: &str, token: &str) -> Request<Body> {
     Request::builder()
         .method(method)
         .uri(uri)
@@ -208,7 +198,11 @@ pub async fn register_account(app: &Router, email: &str, role: &str) {
             "role": role
         }),
     );
-    let response = app.clone().oneshot(request).await.expect("회원가입 요청 실패");
+    let response = app
+        .clone()
+        .oneshot(request)
+        .await
+        .expect("회원가입 요청 실패");
     assert_eq!(response.status(), axum::http::StatusCode::CREATED);
 }
 
@@ -221,7 +215,11 @@ pub async fn login_account(app: &Router, email: &str) -> (String, String) {
             "password": "Password123!"
         }),
     );
-    let response = app.clone().oneshot(request).await.expect("로그인 요청 실패");
+    let response = app
+        .clone()
+        .oneshot(request)
+        .await
+        .expect("로그인 요청 실패");
     assert_eq!(response.status(), axum::http::StatusCode::OK);
 
     let cookie = response

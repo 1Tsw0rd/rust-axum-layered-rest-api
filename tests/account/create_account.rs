@@ -15,7 +15,10 @@ fn body(email: &str, role: &str) -> serde_json::Value {
 #[tokio::test]
 async fn customer_and_employee_can_register() {
     // 시나리오 1: customer와 employee 역할로 회원가입할 수 있다.
-    for (email, role) in [("customer@example.com", "customer"), ("employee@example.com", "employee")] {
+    for (email, role) in [
+        ("customer@example.com", "customer"),
+        ("employee@example.com", "employee"),
+    ] {
         let (app, _pool, _redis) = test_app().await;
         let response = app
             .oneshot(json_request("POST", "/accounts", body(email, role)))
@@ -33,7 +36,11 @@ async fn admin_role_is_rejected() {
     // 시나리오 2: 일반 회원가입에서 admin 역할은 허용하지 않는다.
     let (app, _pool, _redis) = test_app().await;
     let response = app
-        .oneshot(json_request("POST", "/accounts", body("admin-signup@example.com", "admin")))
+        .oneshot(json_request(
+            "POST",
+            "/accounts",
+            body("admin-signup@example.com", "admin"),
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
@@ -54,7 +61,10 @@ async fn validation_rules_are_enforced() {
         serde_json::json!({"email": "valid5@example.com", "password": "Password123!", "name": "   ", "role": "customer"}),
     ] {
         let (app, _pool, _redis) = test_app().await;
-        let response = app.oneshot(json_request("POST", "/accounts", invalid)).await.unwrap();
+        let response = app
+            .oneshot(json_request("POST", "/accounts", invalid))
+            .await
+            .unwrap();
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     }
 }
@@ -66,7 +76,9 @@ async fn missing_field_and_invalid_json_are_rejected() {
     let response = app
         .clone()
         .oneshot(json_request(
-            "POST", "/accounts", serde_json::json!({"email": "missing@example.com"}),
+            "POST",
+            "/accounts",
+            serde_json::json!({"email": "missing@example.com"}),
         ))
         .await
         .unwrap();
@@ -88,13 +100,21 @@ async fn duplicate_email_is_case_insensitive() {
     let (app, _pool, _redis) = test_app().await;
     let response = app
         .clone()
-        .oneshot(json_request("POST", "/accounts", body("Case@example.com", "customer")))
+        .oneshot(json_request(
+            "POST",
+            "/accounts",
+            body("Case@example.com", "customer"),
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::CREATED);
 
     let response = app
-        .oneshot(json_request("POST", "/accounts", body("case@EXAMPLE.COM", "customer")))
+        .oneshot(json_request(
+            "POST",
+            "/accounts",
+            body("case@EXAMPLE.COM", "customer"),
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);

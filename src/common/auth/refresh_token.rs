@@ -1,10 +1,7 @@
+use crate::common::{error::AppError, redis::RedisClient};
 use sha2::{
     Digest, // 해시 알고리즘에서 공통으로 사용하는 기능을 제공하는 trait
     Sha256, // SHA-256 해시 알고리즘
-};
-use crate::common::{
-    error::AppError,
-    redis::RedisClient,
 };
 
 // Refresh Token에 사용할 랜덤 바이트 길이(32 bytes = 256 bits)
@@ -28,11 +25,7 @@ pub fn generate_refresh_token() -> Result<String, AppError> {
 
     // OS 난수원에서 랜덤 바이트 데이터 생성
     getrandom::fill(&mut bytes)
-    .map_err(|_| {
-        AppError::Internal(
-            "Refresh Token 생성에 실패했습니다.".into(),
-        )
-    })?;
+        .map_err(|_| AppError::Internal("Refresh Token 생성에 실패했습니다.".into()))?;
 
     // println!("랜덤 bytes = {:?}", bytes);
     // println!("bytes 길이 = {}", bytes.len());
@@ -54,7 +47,7 @@ pub async fn save_refresh_token(
     redis: &RedisClient,
     refresh_token: &str,
     account_id: i64,
-) -> Result<(), AppError> {   
+) -> Result<(), AppError> {
     // redis에 계정의 현재 Refresh Token hash를 조회하고 기존 Redis Key 생성
     // 1. account:{id}:refresh GET
     let account_key = generate_account_refresh_key(account_id);
@@ -71,18 +64,22 @@ pub async fn save_refresh_token(
     // - old refresh key 존재할 경우 삭제
     // - new refresh key → account_id 저장
     // - account key → new hash 저장
-    redis.atomic_pipeline(|pipeline| {
-        // 기존 Refresh Token이 있으면 삭제
-        if let Some(old_key) = old_key.as_deref() {
-            pipeline.del(old_key).ignore(); // ignore()은 반환값 무시
-        }
-        // refresh:{token_hash} → account_id
-        pipeline.set_ex(&new_key, account_id, REFRESH_TOKEN_EXPIRES_IN_SECONDS).ignore();
-         // account:{account_id}:refresh → token_hash
-        pipeline.set_ex(&account_key, &token_hash, REFRESH_TOKEN_EXPIRES_IN_SECONDS).ignore();
-
-    })
-    .await?;
+    redis
+        .atomic_pipeline(|pipeline| {
+            // 기존 Refresh Token이 있으면 삭제
+            if let Some(old_key) = old_key.as_deref() {
+                pipeline.del(old_key).ignore(); // ignore()은 반환값 무시
+            }
+            // refresh:{token_hash} → account_id
+            pipeline
+                .set_ex(&new_key, account_id, REFRESH_TOKEN_EXPIRES_IN_SECONDS)
+                .ignore();
+            // account:{account_id}:refresh → token_hash
+            pipeline
+                .set_ex(&account_key, &token_hash, REFRESH_TOKEN_EXPIRES_IN_SECONDS)
+                .ignore();
+        })
+        .await?;
 
     Ok(())
 }
@@ -119,15 +116,28 @@ pub async fn rotate_refresh_token(
     }
 
     // 5. redis에 refresh token 갱신
-    redis.atomic_pipeline(|pipeline| {
-        // 기존 Refresh Token 삭제
-        pipeline.del(&old_refresh_key).ignore();
-        // 새로운 Refresh Token -> account_id
-        pipeline.set_ex(&new_refresh_key, account_id, REFRESH_TOKEN_EXPIRES_IN_SECONDS).ignore();
-        // account:{account_id}:refresh -> 새로운 Refresh Token hash
-        pipeline.set_ex(&account_refresh_key, &new_token_hash, REFRESH_TOKEN_EXPIRES_IN_SECONDS).ignore();
-    })
-    .await?;
+    redis
+        .atomic_pipeline(|pipeline| {
+            // 기존 Refresh Token 삭제
+            pipeline.del(&old_refresh_key).ignore();
+            // 새로운 Refresh Token -> account_id
+            pipeline
+                .set_ex(
+                    &new_refresh_key,
+                    account_id,
+                    REFRESH_TOKEN_EXPIRES_IN_SECONDS,
+                )
+                .ignore();
+            // account:{account_id}:refresh -> 새로운 Refresh Token hash
+            pipeline
+                .set_ex(
+                    &account_refresh_key,
+                    &new_token_hash,
+                    REFRESH_TOKEN_EXPIRES_IN_SECONDS,
+                )
+                .ignore();
+        })
+        .await?;
 
     Ok(())
 }
@@ -146,12 +156,9 @@ pub async fn find_refresh_token(
     // 4. 값이 있으면 i64로 변환
     match account_id {
         Some(value) => {
-            let account_id = value.parse::<i64>()
-                .map_err(|_| {
-                    AppError::Internal(
-                        "Redis에 저장된 account_id 형식이 올바르지 않습니다.".into(),
-                    )
-                })?;
+            let account_id = value.parse::<i64>().map_err(|_| {
+                AppError::Internal("Redis에 저장된 account_id 형식이 올바르지 않습니다.".into())
+            })?;
 
             Ok(Some(account_id))
         }
@@ -173,11 +180,12 @@ pub async fn delete_refresh_token(
     let account_refresh_key = generate_account_refresh_key(account_id);
 
     // 3. Redis에서 관리중인 해당 계정의 Refresh Token 정보 삭제
-    redis.atomic_pipeline(|pipeline| {
-        pipeline.del(&refresh_key).ignore();
-        pipeline.del(&account_refresh_key).ignore();
-    })
-    .await?;
+    redis
+        .atomic_pipeline(|pipeline| {
+            pipeline.del(&refresh_key).ignore();
+            pipeline.del(&account_refresh_key).ignore();
+        })
+        .await?;
 
     Ok(())
 }
@@ -191,9 +199,7 @@ mod tests {
     // 시나리오 1: Refresh Token이 정상적으로 생성되고, 32바이트를 hex로 변환한 64글자 문자열인지 검증
     #[test]
     fn generated_refresh_token_is_not_empty() {
-        let token =
-            generate_refresh_token()
-                .expect("Refresh Token 생성 실패");
+        let token = generate_refresh_token().expect("Refresh Token 생성 실패");
 
         // println!("Refresh Token(hex) = {}", token);
         // println!("hex 문자열 길이 = {}", token.len());
@@ -206,13 +212,9 @@ mod tests {
     // 시나리오 2: Refresh Token을 연속으로 생성했을 때 서로 다른 랜덤 값이 생성되는지 검증
     #[test]
     fn generated_refresh_tokens_are_different() {
-        let token1 =
-            generate_refresh_token()
-                .expect("Refresh Token 생성 실패");
+        let token1 = generate_refresh_token().expect("Refresh Token 생성 실패");
 
-        let token2 =
-            generate_refresh_token()
-                .expect("Refresh Token 생성 실패");
+        let token2 = generate_refresh_token().expect("Refresh Token 생성 실패");
 
         assert_ne!(token1, token2);
     }

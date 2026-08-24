@@ -43,11 +43,16 @@ async fn invalid_credentials_are_not_disclosed() {
     let (app, _pool, _redis) = test_app().await;
     register_account(&app, "real@example.com", "customer").await;
 
-    for (email, password) in [("unknown@example.com", "Password123!"), ("real@example.com", "Wrong123!")] {
+    for (email, password) in [
+        ("unknown@example.com", "Password123!"),
+        ("real@example.com", "Wrong123!"),
+    ] {
         let response = app
             .clone()
             .oneshot(json_request(
-                "POST", "/accounts/login", serde_json::json!({"email": email, "password": password}),
+                "POST",
+                "/accounts/login",
+                serde_json::json!({"email": email, "password": password}),
             ))
             .await
             .unwrap();

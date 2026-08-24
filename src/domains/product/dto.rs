@@ -1,7 +1,7 @@
+use crate::domains::product::entity::ProductEntity;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
-use crate::domains::product::entity::ProductEntity;
 
 // =========================================================================
 // [아키텍처 결정 레코드 (ADR) 및 타입 설계 철학 명세]
@@ -15,7 +15,7 @@ use crate::domains::product::entity::ProductEntity;
 //    u64에서 i64로 단순 강제 캐스팅(as) 적용 시, u64::MAX 같은 값이 에러 없이
 //    비트는 그대로 유지된 채 부호만 반전되어 해석됨(예: u64::MAX(0xFFFF...FFFF) → i64로는 -1)
 //    이로 인해 '침묵의 데이터 오염'이 발생할 수 있음
-//    이를 막기 위해 서비스/레포지토리 단마다 try_into() 검증 코드를 추가하려 했으나, 
+//    이를 막기 위해 서비스/레포지토리 단마다 try_into() 검증 코드를 추가하려 했으나,
 //    필드가 늘어날 때마다 검증 소음이 비대해지는 아키텍처적 모순이 발생함
 //
 // 3. [최종 결론 - Validator 다중 방어선 확립]:
@@ -24,10 +24,10 @@ use crate::domains::product::entity::ProductEntity;
 //    음수 유입 방어선은 최외곽 진입점 DTO에서 #[validate(range(min = 1))] 매크로가 단 한 번 전담 통제함
 //
 // 4. [향후 확장성 및 인프라 매핑 가이드 (ClickHouse 배포 시 주의점)]:
-//    추후 대용량 로그/시계열 통계 처리를 위해 ClickHouse 등 Unsigned(UInt64/UInt32)를 
+//    추후 대용량 로그/시계열 통계 처리를 위해 ClickHouse 등 Unsigned(UInt64/UInt32)를
 //    공식 지원하는 가상 인프라가 추가 탑재될 경우, 해당 DB의 물리 스펙(u64/u32)을 존중하여 처리함이 올바르다고 판단
 //    단, ClickHouse는 컬럼별로 파일을 저장·관리하는 대용량 압축 적재(OLAP)에 특화된 구조로 설계되어 있어,
-//    전형적인 웹 서비스의 '단건 행 수정(UPDATE)' 및 '단건 삭제(DELETE)' 연산 시 
+//    전형적인 웹 서비스의 '단건 행 수정(UPDATE)' 및 '단건 삭제(DELETE)' 연산 시
 //    전체 데이터 블록을 다시 굽는 엄청난 디스크 I/O 병목(성능 저하)이 발생함
 //    따라서 잦은 단건 수정이 일어나는 '메인 제품 도메인'은 본 PostgreSQL(RDBMS)를 유지하고,
 //    ClickHouse는 수정/삭제가 일어나지 않는 순수 거대 Append-Only(로그, 지표 수집) 영역에만 격리 구현하고자 함
@@ -68,7 +68,10 @@ pub struct ProductListQuery {
 // 2. [Request-POST] 제품 생성 DTO
 #[derive(Deserialize, Validate)]
 pub struct CreateProductDto {
-    #[validate(custom(function = "validate_name", message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    #[validate(custom(
+        function = "validate_name",
+        message = "제품명은 1자 이상, 100자 이하여야 합니다."
+    ))]
     pub name: String,
 
     #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
@@ -81,7 +84,10 @@ pub struct CreateProductDto {
 // 3. [Request-PUT] 제품 전체 수정 DTO
 #[derive(Debug, Deserialize, Validate)]
 pub struct ReplaceProductDto {
-    #[validate(custom(function = "validate_name", message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    #[validate(custom(
+        function = "validate_name",
+        message = "제품명은 1자 이상, 100자 이하여야 합니다."
+    ))]
     pub name: String,
 
     #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]
@@ -94,7 +100,10 @@ pub struct ReplaceProductDto {
 // 4. [Request-PATCH] 제품 일부 수정 DTO
 #[derive(Debug, Deserialize, Validate)]
 pub struct UpdateProductDto {
-    #[validate(custom(function = "validate_name", message = "제품명은 1자 이상, 100자 이하여야 합니다."))]
+    #[validate(custom(
+        function = "validate_name",
+        message = "제품명은 1자 이상, 100자 이하여야 합니다."
+    ))]
     pub name: Option<String>,
 
     #[validate(length(max = 1000, message = "제품 설명은 최대 1000자입니다."))]

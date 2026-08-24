@@ -1,9 +1,13 @@
 use sqlx::PgPool;
 
-use crate::common::error::AppError;
-use crate::domains::product::dto::{CreateProductDto, ReplaceProductDto, UpdateProductDto, ProductListQuery, ProductResponseDto};
-use crate::domains::product::repository::{ProductRepository, CreateProductParams, UpdateProductParams};
 use crate::common::dto::PaginatedResponseDto;
+use crate::common::error::AppError;
+use crate::domains::product::dto::{
+    CreateProductDto, ProductListQuery, ProductResponseDto, ReplaceProductDto, UpdateProductDto,
+};
+use crate::domains::product::repository::{
+    CreateProductParams, ProductRepository, UpdateProductParams,
+};
 
 // repository 주입
 pub struct ProductService {
@@ -42,7 +46,7 @@ impl ProductService {
                 data: Vec::new(),
                 count: 0,
                 total: 0,
-           });
+            });
         }
 
         // 데이터가 있을 때만 목록 조회
@@ -53,13 +57,8 @@ impl ProductService {
             .collect::<Vec<ProductResponseDto>>();
         let count = data.len();
 
-        Ok(PaginatedResponseDto {
-            data,
-            count,
-            total,
-        })
+        Ok(PaginatedResponseDto { data, count, total })
     }
-
 
     // POST: 제품 생성
     pub async fn create_product(&self, payload: &CreateProductDto) -> Result<(), AppError> {
@@ -68,7 +67,11 @@ impl ProductService {
     }
 
     // PUT: 제품 전체 정보 수정
-    pub async fn replace_product(&self, id: i64, payload: &ReplaceProductDto) -> Result<(), AppError> {
+    pub async fn replace_product(
+        &self,
+        id: i64,
+        payload: &ReplaceProductDto,
+    ) -> Result<(), AppError> {
         // 경계 표현을 위해 아래처럼 명시적으로 params 생성하는 방식도 가능
         // let params = ReplaceProductParams::from((id, payload));
         // self.product_repository.replace(params).await
@@ -79,7 +82,11 @@ impl ProductService {
     }
 
     // PATCH: 제품 일부 정보 수정
-    pub async fn update_product_fields(&self, id: i64, payload: &UpdateProductDto) -> Result<(), AppError> {
+    pub async fn update_product_fields(
+        &self,
+        id: i64,
+        payload: &UpdateProductDto,
+    ) -> Result<(), AppError> {
         if payload.name.is_none() && payload.description.is_none() && payload.price.is_none() {
             return Err(AppError::BadRequest("변경할 필드가 없습니다".to_string()));
         }

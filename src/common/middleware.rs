@@ -1,18 +1,14 @@
 use axum::{
     body::Body,
     extract::State,
-    http::{Request, HeaderValue},
+    http::{HeaderValue, Request},
     middleware::Next,
     response::Response,
 };
-use tracing::{info, Instrument};
+use tracing::{Instrument, info};
 use uuid::Uuid;
 
-use crate::common::{
-    auth::extractor::authenticate,
-    auth::jwt::JwtConfig,
-    error::AppError,
-};
+use crate::common::{auth::extractor::authenticate, auth::jwt::JwtConfig, error::AppError};
 
 // main.rs에 .layer(axum::middleware::from_fn(request_id_middleware)); 로 적용함
 // Request ID Middleware
@@ -46,12 +42,12 @@ use crate::common::{
 //   x-request-id: 63e63954-dd7d-487f-9268-e24fcfd6a5e2
 pub async fn request_id_middleware(
     req: Request<Body>, // HTTP Request 객체 (method, uri, header, body 포함)
-    next: Next, // 다음 middleware 또는 handler 실행 (NestJS의 next()와 유사)
+    next: Next,         // 다음 middleware 또는 handler 실행 (NestJS의 next()와 유사)
 ) -> Response {
     // 요청마다 고유한 Request ID 생성
     let request_id = Uuid::new_v4().to_string();
 
-     // 현재 요청을 표현하는 tracing span 생성하여 request_id, method, uri 정보 공유
+    // 현재 요청을 표현하는 tracing span 생성하여 request_id, method, uri 정보 공유
     let span = tracing::info_span!(
         "request",
         request_id = %request_id,
@@ -63,11 +59,7 @@ pub async fn request_id_middleware(
     // next.run()으로 다음 middleware 또는 handler 실행
     // instrument()를 사용하여 요청 처리 Future 전체에 span 적용
     // 같은 request_id로 controller/service/repository 로그 추적 가능
-    let mut response = next
-        .run(req)
-        .instrument(span.clone())
-        .await;
-
+    let mut response = next.run(req).instrument(span.clone()).await;
 
     // response 완료 로그 기록
     // parent: &span 지정하면 해당 request 완료 로그가 request 로그 트리에 포함됨
@@ -78,11 +70,9 @@ pub async fn request_id_middleware(
 
     // response header에 request id 추가
     // 장애 분석 시 클라이언트가 받은 request id로 서버 로그 검색 가능
-    response.headers_mut()
-        .insert(
-            "x-request-id",
-            HeaderValue::from_str(&request_id).unwrap(),
-        );
+    response
+        .headers_mut()
+        .insert("x-request-id", HeaderValue::from_str(&request_id).unwrap());
 
     // 반환
     response
