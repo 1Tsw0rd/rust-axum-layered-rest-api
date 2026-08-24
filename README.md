@@ -646,6 +646,23 @@ Account 참고
 
 ```text
 .
+├── .github/
+│   └── workflows/
+│       └── ci.yml               ## GitHub Actions CI 실행 파일
+│
+├── docker/
+│   ├── postgres/
+│   │   └── init/
+│   │       ├── 001_init.sql
+│   │       ├── 002_seed.sql
+│   │       └── 003_test_init.sql
+│   ├── redis/
+│   └── dragonfly/
+│
+├── docs/
+│   ├── API.md                  ## API 명세
+│   └── DEVELOPMENT.md          ## 개발 환경 / 실행 가이드
+│
 ├── src/
 │   ├── main.rs        # Application 시작 및 Server 초기화
 │   ├── lib.rs         # Library Module 구성(테스트에서 사용)
@@ -668,9 +685,11 @@ Account 참고
 │   │   │   ├── permission.rs    ## API Permission 정의
 │   │   │   ├── refresh_token.rs ## Refresh Token 생성 / 저장 / Rotation
 │   │   │   └── role.rs          ## Account Role 정의
+│   │   │
 │   │   └── security/            # 비밀번호 등 보안 기능
 │   │       ├── mod.rs
 │   │       └── password.rs      ## Argon2 비밀번호 해싱 / 검증
+│   │
 │   └── domains/                 # 도메인별 기능 모듈
 │       ├── mod.rs
 │       ├── account/
@@ -680,6 +699,7 @@ Account 참고
 │       │   ├── entity.rs         ## Account DB 조회 모델
 │       │   ├── repository.rs     ## Account DB 접근
 │       │   └── service.rs        ## Account 비즈니스 로직
+│       │
 │       └── product/
 │           ├── mod.rs
 │           ├── controller.rs
@@ -687,6 +707,7 @@ Account 참고
 │           ├── entity.rs
 │           ├── repository.rs
 │           └── service.rs
+│
 ├── tests/                      # 통합 테스트
 │   ├── api.rs                  ## 테스트용 앱·DB 초기화
 │   ├── account/
@@ -696,6 +717,7 @@ Account 참고
 │   │   ├── login.rs
 │   │   ├── logout.rs
 │   │   └── refresh.rs
+│   │
 │   └── product/
 │       ├── mod.rs
 │       ├── create_product.rs
@@ -704,17 +726,12 @@ Account 참고
 │       ├── get_products.rs
 │       ├── patch_product.rs
 │       └── put_product.rs
-├── docker/
-│   ├── postgres/
-│   │   └── init/
-│   │       ├── 001_init.sql
-│   │       ├── 002_seed.sql
-│   │       └── 003_test_init.sql
-│   ├── redis/
-│   └── dragonfly/
+│
 ├── Cargo.toml
 ├── Cargo.lock
 ├── docker-compose.yml
+├── rustfmt.toml
+├── LICENSE
 ├── .env
 ├── .env.test
 └── .gitignore
