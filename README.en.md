@@ -660,8 +660,10 @@ See Account
 │   └── dragonfly/
 │
 ├── docs/
-│   ├── API.md                  ## API specification
-│   └── DEVELOPMENT.md          ## Development environment / setup guide
+│   ├── API.md                  ## API specification (Korean)
+│   ├── API.en.md               ## API specification (English)
+│   ├── DEVELOPMENT.md          ## Development environment / setup guide (Korean)
+│   └── DEVELOPMENT.en.md       ## Development environment / setup guide (English)
 │
 ├── src/
 │   ├── main.rs        # Application entry point and server initialization
@@ -732,6 +734,8 @@ See Account
 ├── docker-compose.yml
 ├── rustfmt.toml
 ├── LICENSE
+├── README.md                 ## README (Korean)
+├── README.en.md              ## README (English)
 ├── .env
 ├── .env.test
 ├── .gitignore               ## List of files/folders excluded from git tracking

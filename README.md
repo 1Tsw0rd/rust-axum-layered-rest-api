@@ -660,8 +660,10 @@ Account 참고
 │   └── dragonfly/
 │
 ├── docs/
-│   ├── API.md                  ## API 명세
-│   └── DEVELOPMENT.md          ## 개발 환경 / 실행 가이드
+│   ├── API.md                  ## API 명세 (국문)
+│   ├── API.en.md               ## API 명세 (영문)
+│   ├── DEVELOPMENT.md          ## 개발 환경 / 실행 가이드 (국문)
+│   └── DEVELOPMENT.en.md       ## 개발 환경 / 실행 가이드 (영문)
 │
 ├── src/
 │   ├── main.rs        # Application 시작 및 Server 초기화
@@ -732,6 +734,8 @@ Account 참고
 ├── docker-compose.yml
 ├── rustfmt.toml
 ├── LICENSE
+├── README.md                 ## README (국문)
+├── README.en.md              ## README (영문)
 ├── .env
 ├── .env.test
 ├── .gitignore               ## git 추적에서 제외할 파일/폴더 목록
