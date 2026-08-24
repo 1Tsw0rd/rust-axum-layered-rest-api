@@ -59,15 +59,23 @@ pub struct CreateAccountDto {
     #[validate(email(message = "올바른 이메일 형식이어야 합니다."))]
     pub email: String,
 
-    #[rustfmt::skip]
     #[validate(
-        length(min = 8,max = 100, message = "비밀번호는 8자 이상, 100자 이하여야 합니다."),
-        custom(function = "validate_password", message = "비밀번호는 공백 없이 영문 대문자, 영문 소문자, 숫자, 특수문자 중 3가지 이상을 포함해야 합니다.")
+        length(
+            min = 8,
+            max = 100,
+            message = "비밀번호는 8자 이상, 100자 이하여야 합니다."
+        ),
+        custom(
+            function = "validate_password",
+            message = "비밀번호는 공백 없이 영문 대문자, 영문 소문자, 숫자, 특수문자 중 3가지 이상을 포함해야 합니다."
+        )
     )]
     pub password: String,
 
-    #[rustfmt::skip]
-    #[validate(custom(function = "validate_name", message = "이름은 1자 이상, 50자 이하여야 합니다."))]
+    #[validate(custom(
+        function = "validate_name",
+        message = "이름은 1자 이상, 50자 이하여야 합니다."
+    ))]
     pub name: String,
 
     #[validate(custom(function = "validate_role", message = "요청이 올바르지 않습니다."))]

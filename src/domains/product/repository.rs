@@ -100,14 +100,14 @@ impl ProductRepository {
         let entity = sqlx::query_as!(
             ProductEntity,
             r#"
-            SELECT 
+            SELECT
                 id,
                 name,
                 description,
                 price,
                 created_at,
                 updated_at
-            FROM products 
+            FROM products
             WHERE id = $1
             "#,
             id
