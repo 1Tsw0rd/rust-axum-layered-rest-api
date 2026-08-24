@@ -36,9 +36,10 @@ jobs:
       # 2. Rust stable 버전 설치
       # minimal: 필요한 최소 구성만 설치
       # clippy: cargo clippy 명령에 필요한 구성요소 설치
+      # rustfmt: cargo fmt 명령에 필요한 구성요소 설치
       - name: Setup Rust
         run: |
-          rustup toolchain install stable --profile minimal --component clippy
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt
           rustup default stable
 
       # 3. Cargo 의존성과 빌드 결과를 캐시
@@ -47,19 +48,24 @@ jobs:
       - name: Cache cargo registry and target
         uses: Swatinem/rust-cache@v2
 
-      # 4. .env.test의 CACHE_BACKEND 값 확인
+      # 4. rustfmt 검사
+      #    코드를 고치지 않고, rustfmt.toml 규칙에 맞는 포맷인지만 검사
+      - name: Cargo fmt check
+        run: cargo fmt --check
+
+      # 5. .env.test의 CACHE_BACKEND 값 확인
       - name: Resolve cache backend from .env.test
         id: cache_backend
         run: |
           backend=$(grep -m1 '^CACHE_BACKEND=' .env.test | cut -d '=' -f2 | tr -d '\r')
           echo "backend=${backend}" >> "$GITHUB_OUTPUT"
 
-      # 5. 테스트에 필요한 PostgreSQL과 Cache 서버 실행
+      # 6. 테스트에 필요한 PostgreSQL과 Cache 서버 실행
       - name: Start PostgreSQL and cache backend
         run: docker compose up -d --wait postgres ${{ steps.cache_backend.outputs.backend }}
 
 
-      # 6. Clippy 실행
+      # 7. Clippy 실행
       #
       #    Rust 코드의 정적 분석과 컴파일 검사를 수행
       #
@@ -77,6 +83,6 @@ jobs:
       - name: Cargo clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-      # 7. 전체 테스트 실행
+      # 8. 전체 테스트 실행
       - name: Cargo test
         run: cargo test -- --test-threads=1
