@@ -1,0 +1,82 @@
+# https://docs.github.com/ko/actions
+# Github Actions Workflow 이름
+name: rust-axum-layered-rest-api CI
+
+# 언제 CI 실행할지 정의
+# develop 또는 main 브랜치에 push되거나
+# 해당 브랜치를 대상으로 Pull Request가 생성·변경되면 실행
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+# Github Actions가 저장소 내용을 읽을 수 있는 권한만 허용
+permissions:
+  contents: read
+
+# CI 작업 정의
+jobs:
+  # 검사 작업 이름
+  check:
+    name: Check
+
+    # Github가 제공하는 Ubuntu 가상 환경에서 실행
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Github 저장소의 소스 코드를 CI 실행 환경으로 가져옴(git checkout)
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # 2. Rust stable 버전 설치
+      # minimal: 필요한 최소 구성만 설치
+      # clippy: cargo clippy 명령에 필요한 구성요소 설치
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy
+          rustup default stable
+
+      # 3. Cargo 의존성과 빌드 결과를 캐시
+      # 다음 CI 실행 시 캐시된 의존성을 재사용하여 실행 시간을 줄임
+      # Swatinem/rust-cache@v2는 Rust/Cargo에서 다운로드하거나 빌드한 결과를 캐시해주는 도구
+      - name: Cache cargo registry and target
+        uses: Swatinem/rust-cache@v2
+
+      # 4. .env.test의 CACHE_BACKEND 값 확인
+      - name: Resolve cache backend from .env.test
+        id: cache_backend
+        run: |
+          backend=$(grep -m1 '^CACHE_BACKEND=' .env.test | cut -d '=' -f2 | tr -d '\r')
+          echo "backend=${backend}" >> "$GITHUB_OUTPUT"
+
+      # 5. 테스트에 필요한 PostgreSQL과 Cache 서버 실행
+      - name: Start PostgreSQL and cache backend
+        run: docker compose up -d --wait postgres ${{ steps.cache_backend.outputs.backend }}
+
+
+      # 6. Clippy 실행
+      #
+      #    Rust 코드의 정적 분석과 컴파일 검사를 수행
+      #
+      #    --all-targets:
+      #    일반 코드뿐 아니라 테스트 코드 등도 검사
+      #
+      #    --all-features:
+      #    모든 Cargo feature를 활성화하여 검사
+      #
+      #    -D warnings:
+      #    warning도 CI 실패로 처리
+      #
+      #    cargo clippy는 코드를 컴파일하므로 별도의 cargo check를
+      #    추가하지 않아도 컴파일 가능 여부를 함께 확인할 수 있음
+      - name: Cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      # 7. 전체 테스트 실행
+      - name: Cargo test
+        run: cargo test -- --test-threads=1
